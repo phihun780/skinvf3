@@ -63,7 +63,7 @@ html { scroll-behavior: smooth; }
 [data-reveal].in { opacity: 1; transform: none; }
 
 /* ---- các bước ---- */
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.steps { display: grid; grid-template-columns: repeat(var(--cols, 3), 1fr); gap: 20px; }  /* --cols: Home.tsx theo số bước */
 .step { padding: 30px 30px 34px; border-radius: 26px; }
 .step-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 64px; }
 .step-num { font: 200 58px/1 var(--display); color: rgba(255,255,255,0.9); }
@@ -104,6 +104,7 @@ html { scroll-behavior: smooth; }
 .preset-img { padding: 26px 30px 18px; }  /* chừa lề để xe nằm gọn giữa khung */
 .preset-img img { width: 100%; height: 100%; object-fit: contain; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
 .preset-card:hover .preset-img img { transform: scale(1.04); }
+.preset-noimg { width: 100%; height: 100%; border-radius: 12px; border: 1px dashed var(--line-2); }  /* mẫu chưa có ảnh (CMS) */
 .preset-meta { display: flex; align-items: center; gap: 12px; padding: 16px 20px 18px; border-top: 1px solid rgba(255,255,255,0.1); }
 .dots { display: flex; } .dots i { width: 16px; height: 16px; border-radius: 50%; margin-left: -5px; border: 1.5px solid rgba(255,255,255,0.55); } .dots i:first-child { margin-left: 0; }
 .preset-meta .t { flex: 1; } .preset-meta b { display: block; font: 700 15.5px var(--display); letter-spacing: -0.01em; } .preset-meta small { color: var(--muted); font-size: 12px; }
@@ -120,7 +121,7 @@ html { scroll-behavior: smooth; }
 .plus::before, .plus::after { content: ''; position: absolute; left: 50%; top: 50%; width: 11px; height: 1.5px; background: #fff; transform: translate(-50%, -50%); transition: transform .25s; }
 .plus::after { transform: translate(-50%, -50%) rotate(90deg); }
 details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
-.faq details p { color: var(--muted); margin: 14px 0 0; line-height: 1.7; }
+.faq details p { color: var(--muted); margin: 14px 0 0; line-height: 1.7; white-space: pre-line; }  /* xuống dòng gõ trong CMS */
 .faq .faq-links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .faq-links a { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-2); font-weight: 600; font-size: 13.5px; }
 .faq-links a:hover { color: #fff; }

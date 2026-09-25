@@ -84,9 +84,15 @@ Web **1 trang** (`src/pages/Home.tsx`): Hero · Tính năng cơ bản (#tinh-nan
 
 ## CMS (/cms)
 - Quản lý nội dung trang chủ: đăng nhập bằng mật khẩu → sửa → **Lưu & xuất bản** → web đổi ngay (không cần deploy lại). Bên phải là trang chủ thật thu nhỏ (iframe `/?cms-preview`), đổi theo từng chữ gõ.
-- Hiện có mục **Hero**: 2 dòng tiêu đề, chữ nhỏ góc trái (≤ 4 dòng), câu + chữ nút góc phải, **màu xe mockup** (≤ 8 màu, chỉnh màu + Bóng/Nhám từng vùng hoặc cả nhóm, lấy từ mẫu tham khảo, sắp thứ tự; màu đầu tiên hiện lúc mở trang), số giây tự đổi màu. Các mục khác thêm dần.
-- Code: `src/content/schema.ts` (nội dung mặc định + kiểm tra dữ liệu — thêm mục mới bắt đầu từ đây), `src/content/store.ts` (trang chủ nạp nội dung, nhớ bản cũ trong trình duyệt để hiện ngay), `src/pages/Cms.tsx` + `src/styles/cms.css` (giao diện CMS), `server/cms-api.ts` (API), `functions/api/[[path]].ts` (Cloudflare), `server/dev-plugin.ts` (API giả lập cho localhost).
-- API: `GET /api/content` (công khai) · `POST /api/cms/login` · `GET /api/cms/me` · `PUT /api/cms/content` (cần token). Token hạn 7 ngày, ký bằng mật khẩu → **đổi mật khẩu là mọi phiên cũ bị đăng xuất**. Mỗi lần lưu có 1 bản sao lưu `content/history/<giờ lưu>.json` trên R2 (khôi phục: chép đè lên `content/site.json`).
+- Sửa được **toàn bộ trang chủ**, mỗi mục một form (danh mục bên trái có chấm vàng = mục có thay đổi chưa lưu; xem trước tự cuộn tới mục đang sửa):
+  - **Hero:** 2 dòng tiêu đề, chữ nhỏ góc trái (≤ 4 dòng), câu + chữ nút góc phải, **màu xe mockup** (≤ 8 màu, chỉnh màu + Bóng/Nhám từng vùng hoặc cả nhóm, lấy từ mẫu tham khảo, sắp thứ tự; màu đầu tiên hiện lúc mở trang), số giây tự đổi màu.
+  - **Tính năng cơ bản:** tiêu đề mục; 3 thẻ (nhãn, tiêu đề, mô tả; thẻ chia vùng + thẻ decal đổi được ảnh).
+  - **Sử dụng đơn giản:** tiêu đề mục; 1–6 bước (biểu tượng chọn từ bộ có sẵn `src/ui/icons.tsx`, tiêu đề, mô tả, sắp thứ tự).
+  - **Mẫu tham khảo:** tiêu đề, chữ nút; 1–12 mẫu (tên, nhãn, màu từng vùng, ảnh thẻ). **Tạo ảnh từ màu**: CMS tự dựng xe 3D ẩn, chụp góc 3/4 trước giống ảnh render sẵn, tải lên R2 (`src/pages/cms/ThumbMaker.tsx`); đổi màu mà chưa tạo lại ảnh → thẻ có dấu “!”. Thêm mẫu mới tự tạo ảnh luôn.
+  - **Tự phối màu:** tiêu đề mục. **Câu hỏi thường gặp:** tiêu đề; ≤ 20 câu (câu hỏi, trả lời có xuống dòng, ≤ 4 link — chỉ nhận https://, /đường-dẫn, #mục). Xoá hết câu hỏi = ẩn mục. **Footer:** chữ sau năm (năm tự cập nhật).
+- Ảnh tải lên: CMS tự thu nhỏ (cạnh dài ≤ 1800px) và đổi sang WebP trước khi gửi, lưu R2 `media/<tên ngẫu nhiên>.webp`, phục vụ ở `/api/media/<tên>` (trình duyệt giữ lâu vì tên không đổi).
+- Code: `src/content/schema.ts` (nội dung mặc định + kiểm tra dữ liệu — thêm mục mới bắt đầu từ đây), `src/content/store.ts` (trang chủ nạp nội dung, nhớ bản cũ trong trình duyệt để hiện ngay), `src/pages/Cms.tsx` (khung CMS, đăng nhập, xem trước) + `src/pages/cms/forms.tsx` (form từng mục) + `src/pages/cms/fields.tsx` (ô nhập dùng chung) + `src/styles/cms.css`, `server/cms-api.ts` (API), `functions/api/[[path]].ts` (Cloudflare), `server/dev-plugin.ts` (API giả lập cho localhost).
+- API: `GET /api/content` (công khai) · `POST /api/cms/login` · `GET /api/cms/me` · `PUT /api/cms/content` · `POST /api/cms/media` (cần token) · `GET /api/media/<tên>`. Token hạn 7 ngày, ký bằng mật khẩu → **đổi mật khẩu là mọi phiên cũ bị đăng xuất**. Mỗi lần lưu có 1 bản sao lưu `content/history/<giờ lưu>.json` trên R2 (khôi phục: chép đè lên `content/site.json`).
 - **Deploy lên Cloudflare (lần đầu):**
   1. Cloudflare dashboard → R2 → tạo bucket tên `skinvf3-content` (trùng `wrangler.toml`).
   2. Workers & Pages → Create → Pages → kết nối Git (hoặc `npx wrangler pages deploy dist`). Build command `npm run build`, output `dist`. Binding R2 `CONTENT` lấy từ `wrangler.toml`.
@@ -102,7 +108,7 @@ Web **1 trang** (`src/pages/Home.tsx`): Hero · Tính năng cơ bản (#tinh-nan
 2. Decal (thư viện, upload, chữ). ✅ (chiếu lên bề mặt sơn + ốp nhựa bằng DecalGeometry; thư viện SVG `public/decals/` khai báo ở `src/config/decals.ts`; tải PNG/JPG/WEBP ≤ 15MB → thu còn ≤ 1024px, lưu WebP; chữ 3 kiểu; kéo để di chuyển; kích thước/xoay/độ đậm/lật/chép sang bên kia/lớp/xoá; hoàn tác chung với màu)
 3. Xuất ảnh + poster. ✅ (dọc A4 300dpi 2480×3508 PNG, ghép bằng canvas 2D ở `src/poster/renderPoster.ts`; ảnh 3/4 trước + 4 góc chụp riêng nền trong suốt; bảng màu theo nhóm; decal kèm vị trí dán, kích thước cm; màu poster ở `src/config/poster.ts`)
 4. Trang chủ, Thư viện mẫu, Hướng dẫn/FAQ. 🟡 Trang chủ `/` xong (hero xe 3D tự xoay + đổi mẫu, cách dùng, bento tính năng, thư viện mẫu → `/phoi-xe?preset=<id>`, hỏi đáp, kêu gọi, footer). Thư viện mẫu & hỏi đáp hiện là mục trên trang chủ.
-5. CMS `/cms` (Cloudflare Pages Functions + R2). 🟡 Mục Hero xong; tiếp: Tính năng cơ bản, Sử dụng đơn giản, Mẫu tham khảo, Câu hỏi thường gặp, Footer.
+5. CMS `/cms` (Cloudflare Pages Functions + R2). ✅ Toàn bộ các mục trang chủ.
 6. Hoàn thiện: tối ưu tốc độ, responsive cơ bản, SEO, deploy + tên miền.
 
 ## Cần từ chủ dự án

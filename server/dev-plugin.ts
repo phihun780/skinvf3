@@ -15,8 +15,12 @@ function readVars(file: string): Record<string, string> {
 function fileBucket(dir: string): Bucket {
   const file = (key: string) => path.join(dir, ...key.split('/'));
   return {
-    async get(key) { const f = file(key); if (!fs.existsSync(f)) return null; const t = fs.readFileSync(f, 'utf8'); return { text: async () => t }; },
-    async put(key, value) { const f = file(key); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, value); },
+    async get(key) {
+      const f = file(key); if (!fs.existsSync(f)) return null;
+      const b = fs.readFileSync(f);
+      return { text: async () => b.toString('utf8'), arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer };
+    },
+    async put(key, value) { const f = file(key); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, typeof value === 'string' ? value : Buffer.from(value)); },
   };
 }
 

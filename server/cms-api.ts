@@ -6,13 +6,15 @@
 //   POST /api/cms/login     { password } → { token }  (token hạn 7 ngày)
 //   GET  /api/cms/me        kiểm tra token còn hạn
 //   PUT  /api/cms/content   lưu nội dung (cần token) — ghi bản chính + 1 bản sao lưu theo giờ lưu
+//   POST /api/cms/media     tải ảnh lên (cần token; thân = file ảnh WebP/PNG/JPG ≤ 3MB) → { url }
+//   GET  /api/media/<tên>   ảnh đã tải lên (tên ngẫu nhiên, không bao giờ đổi nội dung → cho trình duyệt giữ lâu)
 //
 // Token = "<hạn>.<chữ ký HMAC-SHA256 bằng mật khẩu>": đổi mật khẩu là mọi phiên đăng nhập cũ hết hiệu lực.
 
-export interface StoredObject { text(): Promise<string> }
+export interface StoredObject { text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }
 export interface Bucket {
   get(key: string): Promise<StoredObject | null>;
-  put(key: string, value: string, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
+  put(key: string, value: string | ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
 }
 export interface CmsEnv { CONTENT?: Bucket; CMS_PASSWORD?: string }
 
@@ -20,6 +22,9 @@ const CONTENT_KEY = 'content/site.json';
 const historyKey = (iso: string) => `content/history/${iso.replace(/[:.]/g, '-')}.json`;
 const TOKEN_TTL = 7 * 24 * 3600 * 1000;
 const MAX_BYTES = 300_000;
+const MAX_MEDIA = 3 * 1024 * 1024;
+const MEDIA_TYPES: Record<string, string> = { webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg' };
+const extOf = (type: string) => Object.keys(MEDIA_TYPES).find(k => MEDIA_TYPES[k] === type);
 
 const json = (data: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers } });
@@ -89,6 +94,25 @@ export async function handleApi(req: Request, env: CmsEnv): Promise<Response> {
     const meta = { httpMetadata: { contentType: 'application/json' } };
     await Promise.all([env.CONTENT.put(CONTENT_KEY, out, meta), env.CONTENT.put(historyKey(updatedAt), out, meta)]);
     return json({ updatedAt });
+  }
+
+  if (path === '/api/cms/media' && method === 'POST') {
+    if (!(await authorized(req, env))) return fail(401, 'Phiên đăng nhập đã hết hạn.');
+    if (!env.CONTENT) return fail(503, 'Chưa gắn kho lưu trữ R2 (binding CONTENT).');
+    const ext = extOf((req.headers.get('content-type') ?? '').split(';')[0].trim());
+    if (!ext) return fail(415, 'Chỉ nhận ảnh WebP, PNG hoặc JPG.');
+    const body = await req.arrayBuffer();
+    if (!body.byteLength || body.byteLength > MAX_MEDIA) return fail(413, 'Ảnh phải nhỏ hơn 3MB.');
+    const name = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    await env.CONTENT.put('media/' + name, body, { httpMetadata: { contentType: MEDIA_TYPES[ext] } });
+    return json({ url: '/api/media/' + name });
+  }
+
+  const media = /^\/api\/media\/([a-z0-9-]+\.(webp|png|jpg))$/.exec(path);
+  if (media && (method === 'GET' || method === 'HEAD')) {
+    const obj = env.CONTENT && await env.CONTENT.get('media/' + media[1]);
+    if (!obj) return fail(404, 'Không tìm thấy ảnh.');
+    return new Response(await obj.arrayBuffer(), { headers: { 'content-type': MEDIA_TYPES[media[2]], 'cache-control': 'public, max-age=31536000, immutable' } });
   }
 
   return fail(404, 'Không tìm thấy.');

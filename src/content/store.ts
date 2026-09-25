@@ -35,12 +35,27 @@ export function loadContent() {
     .finally(() => clearTimeout(timer));
 }
 
-export interface PreviewMessage { type: 'cms-preview'; content: SiteContent; focusLook: number | null }
+export interface PreviewMessage { type: 'cms-preview'; content: SiteContent; focusLook: number | null; section: string }
+
+/** Mục CMS → phần tử trên trang chủ (xem trước tự cuộn tới mục đang sửa). */
+const SECTION_EL: Record<string, string> = {
+  hero: '.hero', features: '#tinh-nang', steps: '#cach-dung', gallery: '#mau', configurator: '.studio-anchor', faq: '#hoi-dap', footer: '.site-footer',
+};
 
 function listenPreview() {
+  let section = '';
   addEventListener('message', (e: MessageEvent<PreviewMessage>) => {
     if (e.origin !== location.origin || e.data?.type !== 'cms-preview') return;
     useContent.setState({ content: normalizeContent(e.data.content), loaded: true, focusLook: e.data.focusLook });
+    if (e.data.section !== section) {
+      section = e.data.section;
+      const go = () => {
+        const el = document.querySelector(SECTION_EL[section] ?? '.hero');
+        if (section === 'hero') scrollTo({ top: 0 });
+        else if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - (section === 'footer' ? innerHeight - 120 : 90) });
+      };
+      requestAnimationFrame(() => requestAnimationFrame(go));
+    }
   });
   parent.postMessage({ type: 'cms-preview-ready' }, location.origin);
 }

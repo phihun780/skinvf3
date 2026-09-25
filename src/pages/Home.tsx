@@ -1,36 +1,31 @@
 // Trang chủ (/): landing page giới thiệu, style mesh xanh + glass.
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { readStill, stillKey, writeStill } from '../three/heroStill';
 import { Link, ROUTES, navigate } from '../router';
 import { useDesign } from '../store/design';
 import { Toast, toast } from '../ui/Chrome';
-import { PRESETS } from '../config/presets';
+import { Icon } from '../ui/icons';
 import { FINISHES, type FinishId } from '../config/finishes';
-import { EDITABLE } from '../config/zones';
 import { home as T } from '../config/i18n/home';
 import { SiteHeader } from '../ui/SiteHeader';
 import { useContent, IS_PREVIEW } from '../content/store';
-import { hashOf } from '../content/schema';
+import { hashOf, safeHref } from '../content/schema';
 import '../styles/home.css';
 
 const HeroCar = lazy(() => import('../three/HeroCar').then(m => ({ default: m.HeroCar })));
 const Configurator = lazy(() => import('./Configurator').then(m => ({ default: m.Configurator })));
 
 const Arrow = () => <svg className="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg>;
-const ICONS: Record<string, ReactNode> = {
-  cursor: <path d="M5 3l6 16 2.5-6.5L20 10 5 3z" />,
-  palette: <><circle cx="12" cy="12" r="9" /><circle cx="8" cy="10" r="1.3" /><circle cx="12" cy="7.5" r="1.3" /><circle cx="16" cy="10" r="1.3" /><path d="M12 21a2.5 2.5 0 0 1 0-5h1.5a2.5 2.5 0 0 0 0-5" /></>,
-  poster: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8 14l3-3 2 2 3-3" /><path d="M8 18h8" /></>,
-};
-const Icon = ({ name }: { name: string }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{ICONS[name]}</svg>;
-
-// Hiện dần khi cuộn tới (thêm class .in cho phần tử [data-reveal])
+// Hiện dần khi cuộn tới (thêm class .in cho phần tử [data-reveal]) — kể cả phần tử thêm sau (nội dung CMS đổi)
 function useReveal() {
   useEffect(() => {
     const io = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }),
       { rootMargin: '0px 0px -8% 0px' });
-    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
-    return () => io.disconnect();
+    const scan = () => document.querySelectorAll('[data-reveal]:not(.in)').forEach(el => io.observe(el));
+    scan();
+    const mo = new MutationObserver(scan);
+    mo.observe(document.querySelector('.home') ?? document.body, { childList: true, subtree: true });
+    return () => { io.disconnect(); mo.disconnect(); };
   }, []);
 }
 
@@ -105,25 +100,24 @@ function Hero() {
   );
 }
 
-function SectionHead({ eyebrow, title, text }: { eyebrow: string; title: [string, string]; text?: string }) {
+function SectionHead({ title }: { title: string }) {
   return (
     <div className="section-head" data-reveal>
-      {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-      <h2>{title[0] && <><span className="thin">{title[0]}</span> </>}<span className="bold">{title[1]}</span></h2>
-      {text && <p className="lead">{text}</p>}
+      <h2><span className="bold">{title}</span></h2>
     </div>
   );
 }
 
 function Steps() {
+  const steps = useContent(s => s.content.steps);
   return (
     <section className="section" id="cach-dung">
       <div className="wrap">
-        <SectionHead eyebrow={T.steps.eyebrow} title={T.steps.title} />
-        <div className="steps">
-          {T.steps.items.map((s, k) => (
-            <article key={s.title} className="step panel" data-reveal style={{ transitionDelay: k * 90 + 'ms' }}>
-              <div className="step-top"><span className="step-num">0{k + 1}</span><span className="step-icon"><Icon name={s.icon} /></span></div>
+        <SectionHead title={steps.title} />
+        <div className="steps" style={{ ['--cols' as string]: steps.items.length === 4 ? 4 : Math.min(steps.items.length, 3) }}>
+          {steps.items.map((s, k) => (
+            <article key={k} className="step panel" data-reveal style={{ transitionDelay: (k % 3) * 90 + 'ms' }}>
+              <div className="step-top"><span className="step-num">{String(k + 1).padStart(2, '0')}</span><span className="step-icon"><Icon name={s.icon} /></span></div>
               <h3>{s.title}</h3><p>{s.text}</p>
             </article>
           ))}
@@ -136,15 +130,15 @@ function Steps() {
 const SPHERE_FINISHES: FinishId[] = ['gloss', 'matte'];
 
 function Features() {
-  const f = T.features;
+  const f = useContent(s => s.content.features);
   return (
     <section className="section" id="tinh-nang">
       <div className="wrap">
-        <SectionHead eyebrow={f.eyebrow} title={f.title} />
+        <SectionHead title={f.title} />
         <div className="bento">
           <article className="card panel zones" data-reveal>
-            <div className="card-text"><span className="tag">{EDITABLE.length} {f.zones.tag}</span><h3>{f.zones.title}</h3><p>{f.zones.text}</p></div>
-            <img src="/home/zones.webp" alt={f.zones.title} loading="lazy" />
+            <div className="card-text"><span className="tag">{f.zones.tag}</span><h3>{f.zones.title}</h3><p>{f.zones.text}</p></div>
+            {f.zones.image && <img src={f.zones.image} alt={f.zones.title} loading="lazy" />}
           </article>
           <article className="card panel finishes-card" data-reveal>
             <div className="card-text"><span className="tag">{f.finishes.tag}</span><h3>{f.finishes.title}</h3></div>
@@ -153,7 +147,7 @@ function Features() {
             </div>
           </article>
           <article className="card panel decal-card" data-reveal>
-            <img src="/home/decal.webp" alt={f.decal.title} loading="lazy" />
+            {f.decal.image && <img src={f.decal.image} alt={f.decal.title} loading="lazy" />}
             <div className="card-text"><span className="tag">{f.decal.tag}</span><h3>{f.decal.title}</h3><p>{f.decal.text}</p></div>
           </article>
         </div>
@@ -163,19 +157,20 @@ function Features() {
 }
 
 function Gallery() {
+  const g = useContent(s => s.content.gallery);
   return (
     <section className="section" id="mau">
       <div className="wrap">
-        <SectionHead eyebrow={T.gallery.eyebrow} title={T.gallery.title} />
+        <SectionHead title={g.title} />
         <div className="gallery">
-          {PRESETS.map((p, k) => (
-            <button key={p.id} className="preset-card panel" data-reveal style={{ transitionDelay: (k % 3) * 80 + 'ms' }}
+          {g.items.map((p, k) => (
+            <button key={p.id + k} className="preset-card panel" data-reveal style={{ transitionDelay: (k % 3) * 80 + 'ms' }}
               onClick={() => { useDesign.getState().replaceAll(p.config); toast(T.gallery.applied(p.name)); navigate(ROUTES.home + '#phoi-xe'); }}>
-              <div className="preset-img"><img src={`/presets/${p.id}.webp`} alt={p.name} loading="lazy" /></div>
+              <div className="preset-img">{p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <span className="preset-noimg" />}</div>
               <div className="preset-meta">
                 <span className="dots">{[p.config.body, p.config.roof, p.config.rim].map((s, j) => <i key={j} style={{ background: s.color }} />)}</span>
                 <span className="t"><b>{p.name}</b><small>{p.tag}</small></span>
-                <span className="use">{T.gallery.use}<Arrow /></span>
+                <span className="use">{g.use}<Arrow /></span>
               </div>
             </button>
           ))}
@@ -186,6 +181,7 @@ function Gallery() {
 }
 
 function ConfiguratorSection() {
+  const title = useContent(s => s.content.configurator.title);
   // chỉ dựng trình phối khi người dùng cuộn tới gần (đỡ tải lúc mở trang); dựng rồi thì giữ nguyên
   const [mount, setMount] = useState(location.hash === '#phoi-xe');
   const ref = useRef<HTMLElement>(null);
@@ -197,7 +193,7 @@ function ConfiguratorSection() {
   return (
     <section className="section" ref={ref}>
       <div className="wrap">
-        <SectionHead eyebrow="" title={T.configurator.title} />
+        <SectionHead title={title} />
         {/* neo #phoi-xe đặt ở khung trình phối: bấm "Tự phối màu" thì khung vừa khít màn hình ngay dưới thanh trên */}
         <div id="phoi-xe" className="studio-anchor">
           <Suspense fallback={<div className="studio-embed panel" />}>
@@ -210,16 +206,21 @@ function ConfiguratorSection() {
 }
 
 function Faq() {
+  const faq = useContent(s => s.content.faq);
+  if (!faq.items.length) return null;
   return (
     <section className="section" id="hoi-dap">
       <div className="wrap faq-grid">
-        <SectionHead eyebrow={T.faq.eyebrow} title={T.faq.title} />
+        <SectionHead title={faq.title} />
         <div className="faq" data-reveal>
-          {T.faq.items.map(([q, a, links]) => (
-            <details key={q} className="panel"><summary>{q}<span className="plus" /></summary><p>{a}</p>
-              {links && <p className="faq-links">{links.map(([label, href]) => <a key={href} href={href} target="_blank" rel="noopener noreferrer">{label}<Arrow /></a>)}</p>}
-            </details>
-          ))}
+          {faq.items.map(({ q, a, links }, k) => {
+            const ok = links.filter(l => l.label && safeHref(l.href));
+            return (
+              <details key={k} className="panel"><summary>{q}<span className="plus" /></summary><p>{a}</p>
+                {ok.length > 0 && <p className="faq-links">{ok.map((l, j) => <a key={j} href={l.href} target={l.href.startsWith('#') ? undefined : '_blank'} rel="noopener noreferrer">{l.label}<Arrow /></a>)}</p>}
+              </details>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -227,9 +228,10 @@ function Faq() {
 }
 
 function Footer() {
+  const text = useContent(s => s.content.footer.text);
   return (
     <footer className="site-footer">
-      <div className="wrap">{new Date().getFullYear()} <span className="sep-v">|</span> SkinVF3</div>
+      <div className="wrap">{new Date().getFullYear()}{text && <> <span className="sep-v">|</span> {text}</>}</div>
     </footer>
   );
 }

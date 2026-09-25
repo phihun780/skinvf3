@@ -11,7 +11,7 @@ export class AuthError extends Error {}
 async function call<T>(path: string, init: RequestInit = {}, token?: string | null): Promise<T> {
   const headers = new Headers(init.headers);
   if (token) headers.set('authorization', 'Bearer ' + token);
-  if (init.body) headers.set('content-type', 'application/json');
+  if (typeof init.body === 'string') headers.set('content-type', 'application/json');
   let res: Response;
   try { res = await fetch(path, { ...init, headers, cache: 'no-store' }); } catch { throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.'); }
   const data = await res.json().catch(() => ({})) as T & { error?: string };
@@ -24,6 +24,8 @@ export const cmsApi = {
   login: (password: string) => call<{ token: string }>('/api/cms/login', { method: 'POST', body: JSON.stringify({ password }) }),
   me: (token: string) => call<{ ok: true }>('/api/cms/me', {}, token),
   load: async () => normalizeContent(await call<unknown>('/api/content')),
+  /** Tải ảnh lên R2 → đường dẫn /api/media/… */
+  upload: (token: string, file: Blob) => call<{ url: string }>('/api/cms/media', { method: 'POST', body: file, headers: { 'content-type': file.type } }, token),
   save: (token: string, content: SiteContent) => {
     const { updatedAt: _drop, ...body } = content; void _drop;
     return call<{ updatedAt: string }>('/api/cms/content', { method: 'PUT', body: JSON.stringify(body) }, token);
