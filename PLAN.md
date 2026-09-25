@@ -76,7 +76,7 @@ Toàn bộ logic chia vùng nằm ở `shared/vf3-zones.js` (dùng chung cho `in
 - `npm install` (lần đầu) → `npm run dev` → mở http://localhost:5180
 - Đổi cách chia vùng (`shared/vf3-zones.js`) → `npm run bake` để tạo lại `public/models/vf3.glb` + `src/generated/zones.json` + `src/generated/model-version.json` (mã phiên bản gắn vào URL model, trình duyệt luôn tải bản mới).
 - `npm run build` → thư mục `dist/` để deploy.
-- CMS trên máy: mở http://localhost:5180/cms, mật khẩu trong file `.dev.vars` (`CMS_PASSWORD=...`). Nội dung lưu thử vào `.cms-data/` (xoá thư mục này = về nội dung mặc định).
+- CMS trên máy: mở http://localhost:5180/cms. File `.dev.vars` có `CMS_REMOTE=https://skinvf3.pages.dev` → localhost dùng chung web thật: đăng nhập bằng `CMS_PASSWORD` trên Cloudflare, **bấm Lưu ở localhost = sửa thẳng web thật**, trang chủ localhost hiện đúng nội dung thật. Muốn thử riêng không đụng web thật: xoá dòng `CMS_REMOTE` → nội dung lưu vào `.cms-data/`, mật khẩu = `CMS_PASSWORD` trong `.dev.vars`.
 - `inspect/` và `mockup/` là công cụ tham khảo cũ, mở bằng server tĩnh riêng (`python -m http.server 5173`).
 
 ## Điều hướng

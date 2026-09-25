@@ -1,5 +1,7 @@
-// Chạy API CMS ngay trong `npm run dev` / `npm run preview` (không cần Cloudflare):
-// nội dung lưu vào .cms-data/ (giả lập R2), mật khẩu đọc từ .dev.vars (CMS_PASSWORD=...).
+// API CMS khi chạy `npm run dev` / `npm run preview`. Cấu hình trong file .dev.vars:
+//  - CMS_REMOTE=https://skinvf3.pages.dev → chuyển mọi yêu cầu /api/* sang web thật: đăng nhập bằng CMS_PASSWORD thật
+//    (đặt trên Cloudflare), bấm Lưu ở localhost là sửa thẳng nội dung web thật (R2 thật). Mặc định đang dùng cách này.
+//  - bỏ CMS_REMOTE → chạy thử riêng trên máy: nội dung lưu vào .cms-data/ (giả lập R2), mật khẩu = CMS_PASSWORD trong .dev.vars.
 import fs from 'node:fs';
 import path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -33,13 +35,22 @@ export function cmsDevApi(): Plugin {
     const bucket = fileBucket(path.join(root, '.cms-data'));
     use(async (req, res, next) => {
       if (!req.url?.startsWith('/api/')) return next();
+      const vars = readVars(path.join(root, '.dev.vars'));   // đọc lại mỗi lần: sửa .dev.vars không cần khởi động lại
+      const remote = vars.CMS_REMOTE?.replace(/\/+$/, '');
       const headers = new Headers();
-      for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string') headers.set(k, v);
+      for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string' && !(remote && /^(host|origin|referer|connection|accept-encoding)$/i.test(k))) headers.set(k, v);
       const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);
-      const r = await handleApi(new Request('http://localhost' + req.url, { method: req.method, headers, body }),
-        { CONTENT: bucket, CMS_PASSWORD: readVars(path.join(root, '.dev.vars')).CMS_PASSWORD });
+      let r: Response;
+      try {
+        r = remote
+          ? await fetch(remote + req.url, { method: req.method, headers, body, redirect: 'manual' })
+          : await handleApi(new Request('http://localhost' + req.url, { method: req.method, headers, body }), { CONTENT: bucket, CMS_PASSWORD: vars.CMS_PASSWORD });
+      } catch {
+        r = new Response(JSON.stringify({ error: `Không kết nối được ${remote}. Kiểm tra mạng.` }), { status: 502, headers: { 'content-type': 'application/json; charset=utf-8' } });
+      }
       res.statusCode = r.status;
-      r.headers.forEach((v, k) => res.setHeader(k, v));
+      // fetch đã tự giải nén → bỏ các header nén / độ dài cũ
+      r.headers.forEach((v, k) => { if (!/^(content-encoding|content-length|transfer-encoding|connection)$/i.test(k)) res.setHeader(k, v); });
       res.end(Buffer.from(await r.arrayBuffer()));
     });
   };
