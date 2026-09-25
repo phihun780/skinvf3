@@ -1,5 +1,5 @@
 // Điện thoại (màn hẹp): 1 dock dính đáy màn hình, gần ngón cái — thay cho bảng màu góc phải, bảng decal và thanh công cụ nổi.
-//   [nội dung theo chế độ]  Màu sơn: dải tên vùng + (khi chọn vùng) dải ô màu, Bóng/Nhám, Giống thân xe
+//   [nội dung theo chế độ]  Màu sơn: dải tên vùng + (khi chọn vùng) dải ô màu, Bóng/Nhám
 //                           Decal: chờ dán → 1 dòng hướng dẫn · đang chọn decal → thanh chỉnh · còn lại → 3 tab Thư viện / Ảnh / Chữ
 //   [hàng công cụ]          Hoàn tác · Làm lại · Tự xoay · Reset · Lưu · Tải hình
 // Dock tự báo mép trên (useSheetTop) → camera đặt xe giữa phần trống phía trên.
@@ -66,7 +66,6 @@ function PaintDock() {
                 <button key={k} className={k === style.finish ? 'on' : ''} onClick={() => apply({ [zone]: { finish: k } })}>{FINISHES[k].name}</button>
               ))}
             </div>
-            {zone !== 'body' && <button className="dock-chip" onClick={() => apply({ [zone]: config.body })}>{t.sameAsBody}</button>}
           </div>
         </div>
       )}
