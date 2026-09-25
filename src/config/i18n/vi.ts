@@ -32,7 +32,6 @@ export const vi = {
   saved: (code: string) => `Đã lưu thiết kế ${code} trong trình duyệt`,
   posterBtn: 'Tải hình ảnh',
   finish: 'Chất bề mặt',
-  finishHint: { gloss: 'Sáng bóng', matte: 'Mịn, không loá', metal: 'Kim loại sáng' },
   palette: 'Bảng màu',
   custom: 'Màu tuỳ chọn',
   quick: 'Áp dụng nhanh',

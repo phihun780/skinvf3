@@ -308,3 +308,4 @@ body.studio-full .toast { z-index: 95; bottom: calc(84px + env(safe-area-inset-b
 .dock-tools button.on { color: var(--accent-2); }
 .dock-tools button.accent { color: #fff; }
 .dock-tools button.accent svg { color: var(--accent-2); }
+.dock-row > .finish-pick { flex: 1; }  /* dock điện thoại: căn giữa cả hàng */

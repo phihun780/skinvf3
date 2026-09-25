@@ -61,7 +61,7 @@ function PaintDock() {
             ))}
           </div>
           <div className="dock-row">
-            <FinishPicker compact zone={zone} color={style.color} value={style.finish} onChange={k => apply({ [zone]: { finish: k } })} />
+            <FinishPicker value={style.finish} onChange={k => apply({ [zone]: { finish: k } })} />
           </div>
         </div>
       )}

@@ -60,7 +60,7 @@ export function ColorPopover() {
 
       <section>
         <span className="eyebrow">{t.finish}</span>
-        <FinishPicker zone={zone} color={shown} value={style.finish} onChange={k => apply({ [zone]: { finish: k } })} />
+        <FinishPicker value={style.finish} onChange={k => apply({ [zone]: { finish: k } })} />
       </section>
 
       {zone !== 'body' && (
