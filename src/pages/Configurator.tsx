@@ -55,7 +55,6 @@ export function Configurator() {
       {gated && (
         <button className="studio-gate" onClick={open}>
           <span className="btn primary">{t.mobile.start}</span>
-          <small>{t.mobile.startHint}</small>
         </button>
       )}
       {full && <button className="studio-close" onClick={close} aria-label={t.close}>✕</button>}

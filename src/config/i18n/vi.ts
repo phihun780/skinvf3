@@ -6,7 +6,6 @@ export const vi = {
   // điện thoại (màn cảm ứng)
   mobile: {
     start: 'Bắt đầu phối',
-    startHint: 'Mở toàn màn hình · kéo để xoay · 2 ngón để phóng to',
     hint: 'Kéo để xoay · 2 ngón để phóng to',
     decalHint: 'Chọn decal rồi chạm lên xe để dán',
     undo: 'Hoàn tác',

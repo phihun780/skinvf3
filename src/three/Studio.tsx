@@ -15,6 +15,7 @@ import { isTouch } from '../ui/device';
 
 // điện thoại: độ phân giải khung 3D + bóng đổ thấp hơn (mượt, đỡ nóng máy), chụm 2 ngón để phóng to
 const TOUCH = isTouch();
+const PREVIEW_ZOOM = 1.45;
 
 // Phần khung (toạ độ NDC) dành cho xe: chừa chỗ cho thanh trên/dưới. Bề ngang tính theo khung giao diện
 // (tối đa LAYOUT.frame px) để màn hình rộng không làm xe to bè ra hai bên.
@@ -24,7 +25,9 @@ const ease = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
 // Khoảng lùi camera để 8 góc hộp bao của xe nằm gọn trong |x| ≤ fx, |y| ≤ fy (NDC), theo hướng nhìn `dir`
 export function fitDistance(box: THREE.Box3, target: THREE.Vector3, dir: THREE.Vector3, cam: THREE.PerspectiveCamera, fx: number, fy = FILL.y) {
+  // bỏ qua phóng to (zoom) + dời khung (view offset) của camera thật: chỉ tính theo góc nhìn + tỉ lệ khung
   const c = cam.clone(), p = new THREE.Vector3(), corners: THREE.Vector3[] = [];
+  c.zoom = 1; c.clearViewOffset(); c.updateProjectionMatrix();
   for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) corners.push(new THREE.Vector3(x, y, z));
   let lo = 0.3, hi = 40;
   for (let i = 0; i < 28; i++) {
@@ -58,9 +61,24 @@ function CameraRig({ box, onPlaced }: { box: THREE.Box3; onPlaced: () => void })
     const c = controls.current!; c.target.copy(target); c.update();
     const d = camera.position.distanceTo(target);
     c.minDistance = d * 0.45; c.maxDistance = d * 1.8;
+    fit34.current = d;
     if (import.meta.env.DEV) Object.assign(window, { __cam: { camera, controls: c } });  // kiểm thử: đặt góc chụp
     onPlaced();
   }, [box]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // khung 3D đổi cỡ (lúc tải trang khung chưa đúng cỡ, xoay ngang điện thoại, kéo cửa sổ) → lùi / tiến camera
+  // theo đúng tỉ lệ, giữ nguyên góc nhìn người dùng đang xem. Không có bước này xe trên điện thoại bị lùi quá xa, trông nhỏ.
+  const fit34 = useRef(0);
+  useEffect(() => {
+    const c = controls.current; if (!fit34.current || !c) return;
+    const dir34 = new THREE.Vector3(...VIEWS.front34).normalize();
+    const now = fitDistance(box, target, dir34, camera, fillX(size.width)), k = now / fit34.current;
+    if (Math.abs(k - 1) < 0.01) return;
+    fit34.current = now;
+    const offset = camera.position.clone().sub(target);   // tính hướng nhìn trước khi dời camera
+    camera.position.copy(target).addScaledVector(offset, k);
+    c.minDistance *= k; c.maxDistance *= k; c.update();
+  }, [size.width, size.height]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // bấm chuyển góc → nội suy theo toạ độ cầu quanh xe (không cắt ngang qua xe)
   useEffect(() => {
@@ -83,6 +101,15 @@ function CameraRig({ box, onPlaced }: { box: THREE.Box3; onPlaced: () => void })
     const left = frameLeft(w) + LAYOUT.gutter, panelLeft = w - left - LAYOUT.panelWidth;
     return { x: w / 2 - (left + panelLeft - LAYOUT.gutter) / 2, y: 0 };
   };
+  // điện thoại, khung xem trước trong trang (chưa bấm "Bắt đầu phối"): phóng to xe cho rõ; vào toàn màn hình thì về cỡ thường
+  useFrame((_, delta) => {
+    const want = TOUCH && !useViewer.getState().full ? PREVIEW_ZOOM : 1;
+    if (Math.abs(camera.zoom - want) < 0.001) return;
+    camera.zoom = THREE.MathUtils.damp(camera.zoom, want, 8, delta);
+    if (Math.abs(camera.zoom - want) < 0.002) camera.zoom = want;
+    camera.updateProjectionMatrix();
+  });
+
   useFrame((_, delta) => {
     // màn hẹp: tấm bảng dưới (bảng màu / decal) tự báo mép trên → xe nằm giữa phần trống phía trên nó
     // màn rộng: panel ở góc phải → dời xe sang trái khi panel mở (chế độ decal: panel luôn mở)
