@@ -11,7 +11,7 @@ import { HoverTip, Loader, ModeSwitch, Toolbar } from '../ui/Chrome';
 import { useViewer } from '../store/viewer';
 import { useDesign } from '../store/design';
 import { NARROW_QUERY, TOUCH_QUERY, useMedia } from '../ui/device';
-import { MobilePaint } from '../ui/MobilePaint';
+import { MobileDock } from '../ui/MobileDock';
 import { t } from '../config/i18n/vi';
 
 export function Configurator() {
@@ -24,7 +24,6 @@ export function Configurator() {
   }, []);
 
   const touch = useMedia(TOUCH_QUERY), narrow = useMedia(NARROW_QUERY);
-  const mode = useDesign(s => s.mode);
   const full = useViewer(s => s.full), setFull = useViewer(s => s.setFull);
   const gated = touch && !full;
 
@@ -48,7 +47,7 @@ export function Configurator() {
       <ModeSwitch />
       <Toolbar />
       <ColorPopover />
-      {narrow && <MobilePaint active={mode === 'paint' && !gated} />}
+      {narrow && <MobileDock active={!gated} />}
       <DecalPanel />
       {!touch && <HoverTip />}
       <PosterModal />

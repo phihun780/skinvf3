@@ -6,7 +6,7 @@ import { useViewer } from '../store/viewer';
 import { zoneInfo } from '../config/zones';
 import { BRAND } from '../config/brand';
 import { t } from '../config/i18n/vi';
-import { TOUCH_QUERY, useMedia } from './device';
+import { NARROW_QUERY, TOUCH_QUERY, useMedia } from './device';
 
 // ---- thông báo nhỏ
 let pushToast: (msg: string) => void = () => {};
@@ -35,7 +35,7 @@ export function Toolbar() {
   const code = useDesign(s => s.code);
   const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0);
   const { undo, redo, resetAll, save } = useDesign.getState();
-  const touch = useMedia(TOUCH_QUERY);
+  const touch = useMedia(TOUCH_QUERY), narrow = useMedia(NARROW_QUERY);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -47,6 +47,7 @@ export function Toolbar() {
     addEventListener('keydown', onKey); return () => removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
+  if (narrow) return null;   // màn hẹp: các nút nằm trong dock dưới cùng (MobileDock → DockTools)
   return (
     <div className="toolbar"><div className="panel">
       {touch && <>
@@ -60,6 +61,24 @@ export function Toolbar() {
       <button className="tb" onClick={() => { save(); toast(t.saved(code)); }}>{Icon.save}<span>{t.save}</span></button>
       <button className="tb" onClick={() => import('./PosterModal').then(m => m.exportPoster())}>{Icon.export}<span>{t.posterBtn}</span></button>
     </div></div>
+  );
+}
+
+/** Hàng công cụ trong dock điện thoại: biểu tượng + chữ nhỏ bên dưới, ô chạm 44px. */
+export function DockTools() {
+  const { autoRotate, toggleAutoRotate } = useViewer();
+  const code = useDesign(s => s.code);
+  const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0);
+  const { undo, redo, resetAll, save } = useDesign.getState();
+  return (
+    <div className="dock-tools">
+      <button disabled={!canUndo} onClick={undo}>{Icon.undo}<span>{t.mobile.undo}</span></button>
+      <button disabled={!canRedo} onClick={redo}>{Icon.redo}<span>{t.mobile.redo}</span></button>
+      <button className={autoRotate ? 'on' : ''} onClick={toggleAutoRotate}>{Icon.rotate}<span>{t.autoRotate}</span></button>
+      <button onClick={() => { resetAll(); toast(t.resetDone); }}>{Icon.reset}<span>{t.reset}</span></button>
+      <button onClick={() => { save(); toast(t.saved(code)); }}>{Icon.save}<span>{t.mobile.saveShort}</span></button>
+      <button className="accent" onClick={() => import('./PosterModal').then(m => m.exportPoster())}>{Icon.export}<span>{t.mobile.imageShort}</span></button>
+    </div>
   );
 }
 

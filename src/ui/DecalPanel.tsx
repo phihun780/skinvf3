@@ -6,8 +6,7 @@ import { DECAL_LIBRARY, TEXT_STYLES, UPLOAD_ACCEPT } from '../config/decals';
 import { imageAspect, prepareUpload, renderText } from './decalImage';
 import { toast } from './Chrome';
 import { t } from '../config/i18n/vi';
-import { NARROW_QUERY, TOUCH_QUERY, useMedia } from './device';
-import { useSheetTop } from './useSheetTop';
+import { NARROW_QUERY, useMedia } from './device';
 
 export function DecalPanel() {
   const mode = useDesign(s => s.mode);
@@ -15,10 +14,7 @@ export function DecalPanel() {
   const { setPending, selectDecal, removeDecal } = useDesign.getState();
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-  const narrow = useMedia(NARROW_QUERY), touch = useMedia(TOUCH_QUERY);
-  const [min, setMin] = useState(false);   // màn hẹp: thu gọn bảng còn thanh tiêu đề (để thấy xe)
-  const panel = useRef<HTMLElement>(null);
-  useSheetTop(panel, narrow && mode === 'decal');
+  const narrow = useMedia(NARROW_QUERY);   // màn hẹp: dùng MobileDock
   const [text, setText] = useState(''), [textColor, setTextColor] = useState('#f6f6f4'), [textStyle, setTextStyle] = useState<string>(TEXT_STYLES[0].id);
 
   // phím Delete xoá decal đang chọn, Esc huỷ chờ dán / bỏ chọn
@@ -33,10 +29,10 @@ export function DecalPanel() {
     addEventListener('keydown', onKey); return () => removeEventListener('keydown', onKey);
   }, [mode]);
 
-  if (mode !== 'decal') return null;
+  if (mode !== 'decal' || narrow) return null;
   const selected = decals.find(d => d.id === selectedId) ?? null;
 
-  const choose = (draft: DecalDraft) => { selectDecal(null); setPending(draft); if (narrow) setMin(true); };
+  const choose = (draft: DecalDraft) => { selectDecal(null); setPending(draft); };
   const pickLibrary = async (item: (typeof DECAL_LIBRARY)[number]) => choose({ label: item.label, src: item.src, aspect: await imageAspect(item.src) });
   const upload = async (file: File | undefined) => {
     if (!file) return;
@@ -46,18 +42,17 @@ export function DecalPanel() {
   const addText = async () => { if (text.trim()) choose(await renderText(text.trim(), textColor, textStyle)); };
 
   return (
-    <aside ref={panel} className={'popover panel decal-panel' + (dragOver ? ' drag-over' : '') + (narrow && min ? ' min' : '')} aria-label={t.decal.title}
+    <aside className={'popover panel decal-panel' + (dragOver ? ' drag-over' : '')} aria-label={t.decal.title}
       onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)}
       onDrop={e => { e.preventDefault(); setDragOver(false); upload(e.dataTransfer.files[0]); }}>
-      <header onClick={narrow ? () => setMin(m => !m) : undefined}>
+      <header>
         <div><span className="eyebrow">{t.decal.eyebrow}</span><h2>{t.decal.title}</h2></div>
-        {narrow && <button className="icon-btn sheet-toggle" aria-label={min ? t.mobile.expand : t.mobile.collapse}>{min ? '▴' : '▾'}</button>}
       </header>
 
       {pending && (
         <div className="pending">
           <img src={pending.src} alt="" />
-          <span>{(touch ? t.mobile.placeHint : t.decal.placeHint)(pending.label)}</span>
+          <span>{t.decal.placeHint(pending.label)}</span>
           <button className="btn sm" onClick={() => setPending(null)}>{t.decal.cancel}</button>
         </div>
       )}
