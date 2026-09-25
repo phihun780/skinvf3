@@ -6,12 +6,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDesign, type Decal, type DecalDraft } from '../store/design';
 import { EDITABLE, SHORT_NAMES, zoneInfo } from '../config/zones';
-import { FINISHES, type FinishId } from '../config/finishes';
 import { PALETTE, colorName } from '../config/palette';
 import { DECAL_LIBRARY, TEXT_STYLES, UPLOAD_ACCEPT } from '../config/decals';
 import { imageAspect, prepareUpload, renderText } from './decalImage';
 import { DockTools, toast } from './Chrome';
 import { useSheetTop } from './useSheetTop';
+import { FinishPicker } from './FinishPicker';
 import { t } from '../config/i18n/vi';
 
 export function MobileDock({ active }: { active: boolean }) {
@@ -61,11 +61,7 @@ function PaintDock() {
             ))}
           </div>
           <div className="dock-row">
-            <div className="dock-seg">
-              {(Object.keys(FINISHES) as FinishId[]).map(k => (
-                <button key={k} className={k === style.finish ? 'on' : ''} onClick={() => apply({ [zone]: { finish: k } })}>{FINISHES[k].name}</button>
-              ))}
-            </div>
+            <FinishPicker compact zone={zone} color={style.color} value={style.finish} onChange={k => apply({ [zone]: { finish: k } })} />
           </div>
         </div>
       )}

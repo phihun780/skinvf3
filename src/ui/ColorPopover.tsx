@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useDesign } from '../store/design';
 import { GROUPS, zoneInfo } from '../config/zones';
-import { FINISHES, type FinishId } from '../config/finishes';
 import { PALETTE, colorName } from '../config/palette';
 import { t } from '../config/i18n/vi';
+import { FinishPicker } from './FinishPicker';
 import { NARROW_QUERY, useMedia } from './device';
 
 export function ColorPopover() {
@@ -60,14 +60,7 @@ export function ColorPopover() {
 
       <section>
         <span className="eyebrow">{t.finish}</span>
-        <div className="finishes">
-          {(Object.keys(FINISHES) as FinishId[])
-            .map(k => (
-              <button key={k} className={'chip' + (k === style.finish ? ' active' : '')} onClick={() => apply({ [zone]: { finish: k } })}>
-                {FINISHES[k].name}
-              </button>
-            ))}
-        </div>
+        <FinishPicker zone={zone} color={shown} value={style.finish} onChange={k => apply({ [zone]: { finish: k } })} />
       </section>
 
       {zone !== 'body' && (
