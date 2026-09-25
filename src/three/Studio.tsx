@@ -84,9 +84,12 @@ function CameraRig({ box, onPlaced }: { box: THREE.Box3; onPlaced: () => void })
     return { x: w / 2 - (left + panelLeft - LAYOUT.gutter) / 2, y: 0 };
   };
   useFrame((_, delta) => {
-    // chế độ decal: panel decal luôn mở (trừ khi đang thu gọn trên điện thoại)
-    const st = useDesign.getState(), panelOpen = !!st.selected || (st.mode === 'decal' && !useViewer.getState().sheetMin);
-    const want = panelOpen ? panelShift(size.width, size.height) : { x: 0, y: 0 };
+    // màn hẹp: tấm bảng dưới (bảng màu / decal) tự báo mép trên → xe nằm giữa phần trống phía trên nó
+    // màn rộng: panel ở góc phải → dời xe sang trái khi panel mở (chế độ decal: panel luôn mở)
+    const st = useDesign.getState(), sheetTop = useViewer.getState().sheetTop;
+    const want = size.width <= LAYOUT.mobile
+      ? (sheetTop != null ? { x: 0, y: size.height / 2 - (64 + Math.min(sheetTop, size.height - 72)) / 2 } : { x: 0, y: 0 })
+      : (st.selected || st.mode === 'decal') ? panelShift(size.width, size.height) : { x: 0, y: 0 };
     const cur = shift.current, v = camera.view;
     const settled = Math.abs(want.x - cur.x) < 0.5 && Math.abs(want.y - cur.y) < 0.5;
     // bỏ qua nếu không đổi gì (kể cả kích thước khung)

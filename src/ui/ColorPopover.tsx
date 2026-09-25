@@ -6,8 +6,10 @@ import { GROUPS, zoneInfo } from '../config/zones';
 import { FINISHES, type FinishId } from '../config/finishes';
 import { PALETTE, colorName } from '../config/palette';
 import { t } from '../config/i18n/vi';
+import { NARROW_QUERY, useMedia } from './device';
 
 export function ColorPopover() {
+  const narrow = useMedia(NARROW_QUERY);   // màn hẹp: dùng MobilePaint
   const selected = useDesign(s => s.selected);
   const config = useDesign(s => s.config);
   const { apply, preview, commitPreview, select } = useDesign.getState();
@@ -18,7 +20,7 @@ export function ColorPopover() {
     addEventListener('keydown', onKey); return () => removeEventListener('keydown', onKey);
   }, [select]);
 
-  if (!selected) return null;
+  if (!selected || narrow) return null;
   const zone = selected.zone, info = zoneInfo(zone), style = config[zone];
   if (!info || !style) return null;
   const group = info.group ?? 'detail';

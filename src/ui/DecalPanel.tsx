@@ -7,7 +7,7 @@ import { imageAspect, prepareUpload, renderText } from './decalImage';
 import { toast } from './Chrome';
 import { t } from '../config/i18n/vi';
 import { NARROW_QUERY, TOUCH_QUERY, useMedia } from './device';
-import { useViewer } from '../store/viewer';
+import { useSheetTop } from './useSheetTop';
 
 export function DecalPanel() {
   const mode = useDesign(s => s.mode);
@@ -17,7 +17,8 @@ export function DecalPanel() {
   const [dragOver, setDragOver] = useState(false);
   const narrow = useMedia(NARROW_QUERY), touch = useMedia(TOUCH_QUERY);
   const [min, setMin] = useState(false);   // màn hẹp: thu gọn bảng còn thanh tiêu đề (để thấy xe)
-  useEffect(() => { useViewer.getState().setSheetMin(narrow && min && mode === 'decal'); }, [narrow, min, mode]);
+  const panel = useRef<HTMLElement>(null);
+  useSheetTop(panel, narrow && mode === 'decal');
   const [text, setText] = useState(''), [textColor, setTextColor] = useState('#f6f6f4'), [textStyle, setTextStyle] = useState<string>(TEXT_STYLES[0].id);
 
   // phím Delete xoá decal đang chọn, Esc huỷ chờ dán / bỏ chọn
@@ -45,7 +46,7 @@ export function DecalPanel() {
   const addText = async () => { if (text.trim()) choose(await renderText(text.trim(), textColor, textStyle)); };
 
   return (
-    <aside className={'popover panel decal-panel' + (dragOver ? ' drag-over' : '') + (narrow && min ? ' min' : '')} aria-label={t.decal.title}
+    <aside ref={panel} className={'popover panel decal-panel' + (dragOver ? ' drag-over' : '') + (narrow && min ? ' min' : '')} aria-label={t.decal.title}
       onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)}
       onDrop={e => { e.preventDefault(); setDragOver(false); upload(e.dataTransfer.files[0]); }}>
       <header onClick={narrow ? () => setMin(m => !m) : undefined}>

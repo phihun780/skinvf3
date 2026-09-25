@@ -20,8 +20,8 @@ interface ViewerState {
   toggleAutoRotate: () => void;
   full: boolean;            // điện thoại: trình phối đang mở toàn màn hình
   setFull: (full: boolean) => void;
-  sheetMin: boolean;        // màn hẹp: bảng decal đang thu gọn → camera không cần dời xe lên
-  setSheetMin: (v: boolean) => void;
+  sheetTop: number | null;  // màn hẹp: mép trên của bảng dưới cùng (px, tính từ đỉnh khung 3D) → camera đặt xe vào phần còn trống
+  setSheetTop: (v: number | null) => void;
 }
 
 export const useViewer = create<ViewerState>(set => ({
@@ -33,6 +33,6 @@ export const useViewer = create<ViewerState>(set => ({
   toggleAutoRotate: () => set(s => ({ autoRotate: !s.autoRotate })),
   full: false,
   setFull: full => set({ full }),
-  sheetMin: false,
-  setSheetMin: sheetMin => set({ sheetMin }),
+  sheetTop: null,
+  setSheetTop: sheetTop => set({ sheetTop }),
 }));

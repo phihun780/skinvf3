@@ -233,6 +233,18 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
 .modal-box header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
 .modal-box h2 { margin: 4px 0 0; font: 700 21px var(--display); letter-spacing: -0.015em; }
 .modal-actions { display: flex; gap: 8px; }
+.modal { grid-template-columns: minmax(0, 1fr); }   /* khung không bị nội dung đẩy rộng quá màn hình */
+/* điện thoại: toàn màn hình, nút lớn ở dưới (gần ngón cái) */
+.modal-full { padding: 0; }
+.modal-full .modal-box { width: 100%; height: 100%; max-height: none; border-radius: 0; border: 0; padding: calc(14px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom)); }
+.modal-full header { margin-bottom: 12px; }
+.modal-full .modal-x { width: 40px; height: 40px; font-size: 14px; flex: none; }
+.modal-full .poster-view { border-radius: 14px; }
+.modal-full .poster-view img { max-height: 100%; }
+.modal-foot { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; padding-top: 12px; }
+.modal-foot .btn { justify-content: center; height: 50px; padding: 0 12px; }
+.modal-foot .btn:disabled { opacity: .45; }
+.modal-foot small { grid-column: 1 / -1; text-align: center; color: var(--faint); font-size: 11.5px; }
 .poster-view { flex: 1; min-height: 0; overflow: auto; border-radius: 12px; background: rgba(2,8,36,0.5); display: grid; place-items: center; }
 .poster-view img { display: block; max-width: 100%; max-height: calc(100vh - 160px); cursor: zoom-in; }
 .poster-view.zoom { place-items: start center; }

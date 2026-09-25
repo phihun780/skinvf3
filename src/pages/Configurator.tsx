@@ -10,7 +10,8 @@ import { PosterModal } from '../ui/PosterModal';
 import { HoverTip, Loader, ModeSwitch, Toolbar } from '../ui/Chrome';
 import { useViewer } from '../store/viewer';
 import { useDesign } from '../store/design';
-import { TOUCH_QUERY, useMedia } from '../ui/device';
+import { NARROW_QUERY, TOUCH_QUERY, useMedia } from '../ui/device';
+import { MobilePaint } from '../ui/MobilePaint';
 import { t } from '../config/i18n/vi';
 
 export function Configurator() {
@@ -22,7 +23,8 @@ export function Configurator() {
     io.observe(box.current!); return () => io.disconnect();
   }, []);
 
-  const touch = useMedia(TOUCH_QUERY);
+  const touch = useMedia(TOUCH_QUERY), narrow = useMedia(NARROW_QUERY);
+  const mode = useDesign(s => s.mode);
   const full = useViewer(s => s.full), setFull = useViewer(s => s.setFull);
   const gated = touch && !full;
 
@@ -46,6 +48,7 @@ export function Configurator() {
       <ModeSwitch />
       <Toolbar />
       <ColorPopover />
+      {narrow && <MobilePaint active={mode === 'paint' && !gated} />}
       <DecalPanel />
       {!touch && <HoverTip />}
       <PosterModal />

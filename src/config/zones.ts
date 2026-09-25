@@ -20,6 +20,12 @@ export const EDITABLE = [
   'rim', 'caliper', 'nuts',
   'chrome',
 ] as const;
+/** Tên ngắn cho dải chọn vùng trên điện thoại (tên đầy đủ ở zones.json). */
+export const SHORT_NAMES: Record<string, string> = {
+  body: 'Thân xe', hood: 'Capo', roof: 'Nóc', mirror: 'Vỏ gương', mirrorBase: 'Chân gương', aPillar: 'Trụ A',
+  bumperF: 'Cản trước', bumperR: 'Cản sau', skirt: 'Ốp sườn', grille: 'Ca-lăng', lowerF: 'Ốp dưới trước', lowerR: 'Ốp dưới sau',
+  rim: 'Mâm', caliper: 'Cùm phanh', nuts: 'Ốc bánh', chrome: 'Nẹp chrome',
+};
 export const isEditable = (id: unknown): id is string => typeof id === 'string' && (EDITABLE as readonly string[]).includes(id);
 
 const trims = (color: string, finish: FinishId = 'matte'): DesignConfig => Object.fromEntries(
