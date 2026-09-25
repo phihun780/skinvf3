@@ -114,14 +114,12 @@ export async function renderPoster(date = new Date()): Promise<HTMLCanvasElement
   drawShot(g, heroImg, HERO.x, HERO.y, HERO.w, HERO.h, t.views.front34, true);
   smallImgs.forEach((img, i) => drawShot(g, img, M + (i % 2) * (CELL.w + GAP), GRID_Y + Math.floor(i / 2) * (CELL.h + GAP), CELL.w, CELL.h, t.views[smallViews[i]]));
 
-  // ---- chân trang: địa chỉ web (mờ) + ghi công mô hình 3D (nhỏ, mờ hơn — giấy phép CC BY yêu cầu ghi tên tác giả)
+  // ---- chân trang: chỉ địa chỉ web (mờ) — nguồn mô hình 3D đã ghi trên web (mục Câu hỏi thường gặp)
   const FY = GRID_Y + 2 * CELL.h + GAP + 50;
   g.fillStyle = C.lineSoft; g.fillRect(M, FY, W - 2 * M, 2);
   g.textAlign = 'center';
   g.font = font(600, 34); g.fillStyle = C.faint; g.letterSpacing = '8px';
-  g.fillText(SITE_URL, W / 2, FY + 78); g.letterSpacing = '0px';
-  g.font = font(400, 19); g.fillStyle = 'rgba(200,220,255,0.3)';
-  g.fillText(`Mô hình 3D: ${BRAND.modelCredit}`, W / 2, FY + 122);
+  g.fillText(SITE_URL, W / 2, FY + 90); g.letterSpacing = '0px';
   g.textAlign = 'left';
   return cv;
 }
