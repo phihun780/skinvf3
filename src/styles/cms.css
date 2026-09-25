@@ -162,11 +162,37 @@
 .cms-toast.bad { background: rgba(90, 16, 30, 0.88); border-color: rgba(255, 120, 140, 0.45); }
 @keyframes cms-in { from { opacity: 0; transform: translate(-50%, 8px); } }
 
+.cms-preview-btn, .cms-preview-close { display: none; }
+
+/* màn hẹp (máy tính bảng, điện thoại): 1 cột; danh mục cuộn ngang; xem trước mở bằng nút "Xem trước" thành lớp phủ */
 @media (max-width: 1100px) {
-  .cms { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(0, 1fr); }
-  .cms-top { flex-wrap: wrap; padding: 12px 16px; }
-  .cms-nav { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px 12px; }
+  .cms { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); }
+  .cms-top { flex-wrap: wrap; gap: 8px 14px; padding: 10px 14px; }
+  .cms-actions { width: 100%; margin-left: 0; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .cms-actions::-webkit-scrollbar { display: none; }
+  .cms-actions .btn { flex: none; }
+  .cms-actions .btn.primary { order: -1; }   /* nút Lưu luôn thấy ngay */
+  .cms-nav { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px 12px; scrollbar-width: none; }
   .cms-nav .eyebrow { display: none; }
-  .cms-nav button { white-space: nowrap; }
+  .cms-nav button { white-space: nowrap; flex: none; }
+  .cms-form { border-right: 0; min-width: 0; }
   .cms-preview { display: none; }
+  .cms-preview-btn { display: inline-flex; }
+  .cms.show-preview .cms-preview { display: flex; position: fixed; inset: 0; z-index: 20; padding: 12px; background: rgba(2, 8, 36, 0.96); }
+  .cms-preview-close { display: grid; place-items: center; margin-left: auto; }
+}
+@media (max-width: 600px) {
+  .cms-form { padding: 14px 12px 40px; gap: 12px; }
+  .cms-group { padding: 14px 12px; }
+  .cms-status { font-size: 11px; }
+  .cms-zone { grid-template-columns: auto 1fr; padding: 8px 10px; }
+  .cms-zone > span:first-child { grid-column: 1 / -1; }
+  .cms-zone .cms-seg { justify-self: end; }
+  .cms-image { flex-direction: column; }
+  .cms-image-box { width: 100%; }
+  .cms-cards { grid-template-columns: repeat(2, 1fr); }
+  .cms-link-row { grid-template-columns: 1fr auto; }
+  .cms-link-row input:nth-child(2) { grid-column: 1; }
+  .cms-link-row .cms-icon { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+  .cms-preview-bar { flex-wrap: wrap; gap: 10px; }
 }

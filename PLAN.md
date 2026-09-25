@@ -82,6 +82,14 @@ Toàn bộ logic chia vùng nằm ở `shared/vf3-zones.js` (dùng chung cho `in
 ## Điều hướng
 Web **1 trang** (`src/pages/Home.tsx`): Hero · Tính năng cơ bản (#tinh-nang) · Sử dụng đơn giản · Mẫu tham khảo (#mau) · **Tự phối màu (#phoi-xe, trình phối nhúng trong khung `.studio-embed`)** · Câu hỏi thường gặp · Footer. Menu trên cùng (Trang chủ · Tính năng · Mẫu tham khảo · Tự phối màu) chỉ cuộn mượt tới mục và tự sáng mục đang xem. Bấm thẻ mẫu = áp mẫu vào trình phối + cuộn xuống. Trình phối chỉ dựng khi cuộn tới gần, 2 khung 3D (hero + trình phối) tự dừng vẽ khi khuất. Trong trình phối: kéo để xoay, lăn chuột để cuộn trang, Ctrl + lăn để phóng to. Link cũ `/phoi-xe?preset=<id>` vẫn chạy (áp mẫu rồi chuyển về `/#phoi-xe`).
 
+## Điện thoại (màn cảm ứng)
+- Nhận biết bằng `(pointer: coarse)` / `(max-width: 760px)` — `src/ui/device.ts`.
+- **Menu:** màn ≤ 900px gọn trong nút ☰ → bảng thả xuống đủ 4 mục (`SiteHeader.tsx`); chỉ đóng khi thật sự cuộn > 12px / đổi bề ngang (thanh địa chỉ co giãn không làm đóng).
+- **Hero:** cao theo `100svh` (không nhảy khi thanh địa chỉ ẩn/hiện), chữ nhỏ thành 1 dòng giữa, chấm màu 32px dễ chạm.
+- **Trình phối:** trong trang chỉ là bản xem trước (không bắt cử chỉ → vuốt vẫn cuộn trang). Chạm **Bắt đầu phối** → toàn màn hình (`.studio-embed.full`, khoá cuộn trang), kéo để xoay, **chụm 2 ngón để phóng to**, ✕ hoặc nút Back của điện thoại để thoát. Thanh dưới có thêm Hoàn tác / Làm lại. Bảng màu / decal là tấm trượt từ dưới lên; bảng decal thu gọn được (chọn decal xong tự thu gọn để chạm lên xe dán), camera tự đưa xe vào phần còn trống. Khung decal có tay cầm to cho ngón tay.
+- **Mượt:** khung 3D tối đa 1.5× độ phân giải, bóng đổ 512px; thẻ kính trong danh sách bỏ lớp làm mờ nền (nặng khi cuộn); ô nhập chữ 16px (iOS không tự phóng to); Mẫu tham khảo là dải thẻ vuốt ngang.
+- **CMS trên điện thoại:** 1 cột, danh mục cuộn ngang, nút **Xem trước** mở bản xem trước toàn màn hình.
+
 ## CMS (/cms)
 - Quản lý nội dung trang chủ: đăng nhập bằng mật khẩu → sửa → **Lưu & xuất bản** → web đổi ngay (không cần deploy lại). Bên phải là trang chủ thật thu nhỏ (iframe `/?cms-preview`), đổi theo từng chữ gõ.
 - Sửa được **toàn bộ trang chủ**, mỗi mục một form (danh mục bên trái có chấm vàng = mục có thay đổi chưa lưu; xem trước tự cuộn tới mục đang sửa):

@@ -17,7 +17,7 @@ html { scroll-behavior: smooth; }
 .btn .arrow { width: 16px; height: 16px; }
 
 /* ---- hero ---- */
-.hero { position: relative; height: 100vh; min-height: 720px; max-height: 1100px; overflow: hidden; }
+.hero { position: relative; height: 100vh; height: 100svh; min-height: 720px; max-height: 1100px; overflow: hidden; }
 /* chữ lớn nằm SAU xe: nóc xe đè lên phần dưới cụm chữ (chủ dự án chọn) */
 .hero-title { position: absolute; left: 0; right: 0; top: 12%; text-align: center; z-index: 1; padding: 0 16px; }
 .hero-title .eyebrow { margin: 0 0 34px; letter-spacing: 0.34em; font-size: 12px; }
@@ -141,21 +141,62 @@ details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
   .hero-side p { display: none; }
 }
 @media (max-width: 760px) {
-  .hero { min-height: 640px; }
-  .hero-title { top: 13%; }
+  /* hero: tiêu đề trên · xe giữa · chữ nhỏ + chấm màu + nút dưới (đo theo chiều cao màn hình di động thật, 100svh) */
+  .hero { min-height: 600px; max-height: 960px; }
+  .hero-title { top: 11.5%; }
   .hero h1 .l1 { font-size: 12.6vw; }
   .hero h1 .l2 { font-size: 6.4vw; }
-  .hero-title .eyebrow { letter-spacing: 0.22em; font-size: 10.5px; }
-  .hero-car { top: 16%; bottom: 23%; }
-  .hero-points { display: none; }
-  .hero-side { left: 0; right: 0; bottom: 30px; align-items: center; }
-  .hero-presets { bottom: 100px; padding: 6px 8px; gap: 6px; }
-  .hero-presets button { width: 26px; height: 26px; }
-  .home { --header-h: 64px; --gap: 20px; }
-  .section { --pad: 90px; }
-  .steps, .gallery, .bento { grid-template-columns: 1fr; }
+  .hero-car { top: 25%; bottom: 31%; }
+  .hero-loading { top: 50%; }
+  .hero-points { left: 16px; right: 16px; bottom: 164px; flex-direction: row; justify-content: center; flex-wrap: wrap; gap: 6px 18px; }
+  .hero-points li { font-size: 11px; letter-spacing: 0.14em; color: var(--muted); }
+  .hero-points li + li::before { content: '·'; margin-right: 18px; margin-left: -9px; opacity: .6; }
+  .hero-side { left: 0; right: 0; bottom: 28px; align-items: center; }
+  .hero-side .btn { height: 46px; padding: 0 26px; }
+  .hero-presets { bottom: 92px; padding: 6px; gap: 8px; }
+  .hero-presets button { width: 32px; height: 32px; }
+  .home { --header-h: 64px; --gap: 16px; }
+  /* mục: gọn hơn cho màn nhỏ */
+  .section { --pad: 60px; }
+  .section-head { margin-bottom: 24px; }
+  .section-head h2 { margin: 0; }
+  .section-head h2 .bold { font-size: clamp(28px, 8.4vw, 34px); line-height: 1.08; }
+  .steps, .bento { grid-template-columns: 1fr; gap: 12px; }
   .zones, .finishes-card, .decal-card { grid-column: span 1; }
-  .step-top { margin-bottom: 36px; }
+  .bento { grid-auto-rows: auto; }
+  .step { padding: 20px 20px 22px; border-radius: 22px; }
+  .step-top { margin-bottom: 18px; }
+  .step-num { font-size: 42px; }
+  .step-icon { width: 46px; height: 46px; border-radius: 14px; }
+  .step-icon svg { width: 22px; height: 22px; }
+  .step h3, .card h3 { font-size: 18.5px; margin-bottom: 8px; }
+  .step p, .card p { font-size: 14px; line-height: 1.6; }
+  .card { padding: 22px; border-radius: 22px; }
+  .zones img { margin: 12px 0 -10px; }
+  .spheres { margin-top: 16px; }
+  .spheres .sphere { width: 70px; height: 70px; }
+  .decal-card img { width: 100%; margin: 0 0 12px; }
+  /* mẫu tham khảo: dải thẻ vuốt ngang, dừng đúng từng thẻ */
+  .gallery { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+    margin: 0 calc(-1 * var(--gutter)); padding: 4px var(--gutter) 14px; scroll-padding: 0 var(--gutter); scrollbar-width: none; }
+  .gallery::-webkit-scrollbar { display: none; }
+  .gallery .preset-card { flex: 0 0 82%; scroll-snap-align: center; }
+  .gallery [data-reveal] { opacity: 1; transform: none; }
+  .preset-img { padding: 18px 20px 12px; }
+  .preset-meta { padding: 14px 16px 16px; }
+  /* hỏi đáp */
+  .faq details { padding: 16px 18px; border-radius: 16px; }
+  .faq summary { font-size: 15px; gap: 14px; }
+  .plus { width: 28px; height: 28px; }
+}
+/* thẻ kính trong danh sách trên điện thoại: bỏ lớp làm mờ nền (rất nặng khi cuộn), thay bằng nền kính đậm hơn → cuộn mượt */
+@media (pointer: coarse) {
+  .home .section .panel:not(.studio-embed) { backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: linear-gradient(150deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05) 55%, rgba(255,255,255,0.08)), rgba(10, 30, 100, 0.42); }
+}
+@media (hover: none) {
+  .preset-card:hover { transform: none; box-shadow: var(--glass-shadow); border-color: var(--glass-border); }
+  .preset-card:active { transform: scale(.985); }
 }
 
 /* ---- thẻ mẫu là nút (áp mẫu vào trình phối bên dưới) ---- */
@@ -175,3 +216,29 @@ button.preset-card { width: 100%; padding: 0; text-align: left; font: inherit; c
   .studio-embed { height: calc(100svh - 90px); border-radius: 22px; }
   .studio-embed .popover { left: 8px; right: 8px; bottom: 64px; max-height: 60%; }
 }
+
+/* ---- điện thoại: trình phối trong trang = bản xem trước; chạm "Bắt đầu phối" → toàn màn hình ---- */
+.studio-embed.gated { height: min(68svh, 560px); }
+.studio-embed.gated .stage { pointer-events: none; }                 /* vuốt trên khung vẫn cuộn trang */
+.studio-embed.gated .mode, .studio-embed.gated .toolbar, .studio-embed.gated .popover { display: none; }
+.studio-gate { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px;
+  padding: 0 20px 26px; border: 0; background: linear-gradient(to top, rgba(2, 8, 36, 0.7), rgba(2, 8, 36, 0) 45%); border-radius: inherit; }
+.studio-gate .btn { height: 48px; padding: 0 30px; }
+.studio-gate small { color: var(--muted); font-size: 12px; }
+.studio-embed.full { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100vh; height: 100dvh; border-radius: 0; border: 0; }
+.studio-embed.full .mode { top: calc(14px + env(safe-area-inset-top)); }
+.studio-embed.full .toolbar { bottom: calc(14px + env(safe-area-inset-bottom)); }
+.studio-embed.full .popover { bottom: calc(70px + env(safe-area-inset-bottom)); }
+.studio-close { position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 12px; z-index: 30; width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 15px; color: #fff; background: rgba(6, 20, 72, 0.6); border: 1px solid var(--line-2);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+body.studio-full { overflow: hidden; overscroll-behavior: none; }
+body.studio-full .toast { z-index: 95; bottom: calc(84px + env(safe-area-inset-bottom)); }
+.studio-embed.full .hint { display: block; white-space: normal; text-align: center; max-width: 92vw; }
+/* bảng decal thu gọn (màn hẹp): chỉ còn thanh tiêu đề (+ dòng "chạm lên xe để dán"), chạm để mở lại */
+.decal-panel header { cursor: default; }
+.sheet-toggle { margin-left: auto; flex: none; }
+.decal-panel.min { padding-bottom: 12px; }
+.decal-panel.min > :not(header):not(.pending) { display: none; }
+.decal-panel.min header { margin-bottom: 0; cursor: pointer; }
+.decal-panel.min .pending { margin: 12px 0 0; }

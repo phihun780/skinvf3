@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, ROUTES } from '../router';
 import { t } from '../config/i18n/vi';
 
-const LINKS = [
+export const LINKS = [
   { id: '', label: t.nav.home },
   { id: 'tinh-nang', label: t.nav.features },
   { id: 'mau', label: t.nav.gallery },
@@ -13,7 +13,7 @@ const LINKS = [
 const SECTIONS = ['tinh-nang', 'mau', 'phoi-xe'];
 
 /** Mục đang xem: mục cuối cùng có mép trên đã qua 40% chiều cao màn hình ('' = đầu trang). */
-function useCurrentSection() {
+export function useCurrentSection() {
   const [current, setCurrent] = useState('');
   useEffect(() => {
     let raf = 0;

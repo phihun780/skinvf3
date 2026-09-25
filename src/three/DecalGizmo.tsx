@@ -12,10 +12,15 @@ import { useDesign, type Decal } from '../store/design';
 import { DECAL_SIZE } from '../config/decals';
 import { t } from '../config/i18n/vi';
 import { rotateCursor } from './rotateCursor';
+import { isTouch } from '../ui/device';
 
 const _o = new THREE.Object3D(), _v = new THREE.Vector3();
 type Pt = [number, number];
-const ROT_OFF = 24, ROT_R = 21;  // vùng xoay ngoài góc (px)
+// màn cảm ứng: vùng chạm to hơn (ngón tay ~ 40px)
+const TOUCH = isTouch();
+const ROT_OFF = TOUCH ? 36 : 24, ROT_R = TOUCH ? 26 : 21;  // vùng xoay ngoài góc (px)
+const CORNER_R = TOUCH ? 17 : 9;                             // ô co giãn ở góc
+const DEL_OFF = TOUCH ? 34 : 26;                             // nút ✕ cách cạnh trên
 
 /** 4 góc decal trên màn hình (px, so với tâm decal): trên-trái, trên-phải, dưới-phải, dưới-trái (theo hướng decal). */
 function screenCorners(d: Decal, camera: THREE.Camera, w: number, h: number): Pt[] {
@@ -72,7 +77,7 @@ export function DecalGizmo() {
     let top = 0;
     for (let i = 1; i < 4; i++) if (c[i][1] + c[(i + 1) % 4][1] < c[top][1] + c[(top + 1) % 4][1]) top = i;
     const a = c[top], b = c[(top + 1) % 4], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, ml = Math.hypot(mx, my) || 1;
-    if (del.current) del.current.style.transform = `translate(${mx + mx / ml * 26}px, ${my + my / ml * 26}px)`;
+    if (del.current) del.current.style.transform = `translate(${mx + mx / ml * DEL_OFF}px, ${my + my / ml * DEL_OFF}px)`;
   });
 
   if (mode !== 'decal' || pending || !decal) return null;
@@ -118,7 +123,7 @@ export function DecalGizmo() {
           {[0, 1, 2, 3].map(i => <circle key={'r' + i} ref={el => { rotZones.current[i] = el; }} className="gizmo-rotate" r={ROT_R} onPointerDown={startDrag('rotate')}><title>{t.decal.gizmoRotate}</title></circle>)}
           {[0, 1, 2, 3].map(i => <line key={'e' + i} ref={el => { edges.current[i] = el; }} className="gizmo-edge" onPointerDown={startDrag('scale')}><title>{t.decal.gizmoScale}</title></line>)}
           {[0, 1, 2, 3].map(i => <rect key={'k' + i} ref={el => { knobs.current[i] = el; }} className="gizmo-knob" width="9" height="9" />)}
-          {[0, 1, 2, 3].map(i => <circle key={'c' + i} ref={el => { corners.current[i] = el; }} className="gizmo-corner" r="9" onPointerDown={startDrag('scale')}><title>{t.decal.gizmoScale}</title></circle>)}
+          {[0, 1, 2, 3].map(i => <circle key={'c' + i} ref={el => { corners.current[i] = el; }} className="gizmo-corner" r={CORNER_R} onPointerDown={startDrag('scale')}><title>{t.decal.gizmoScale}</title></circle>)}
         </svg>
         <button ref={del} className="gizmo-del" title={t.decal.remove} aria-label={t.decal.remove}
           onPointerDown={e => e.stopPropagation()} onClick={() => useDesign.getState().removeDecal(decal.id)}>

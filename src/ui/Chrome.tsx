@@ -6,6 +6,7 @@ import { useViewer } from '../store/viewer';
 import { zoneInfo } from '../config/zones';
 import { BRAND } from '../config/brand';
 import { t } from '../config/i18n/vi';
+import { TOUCH_QUERY, useMedia } from './device';
 
 // ---- thông báo nhỏ
 let pushToast: (msg: string) => void = () => {};
@@ -24,13 +25,17 @@ const Icon = {
   save: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h11l3 3v15H5z" /><path d="M8 3v5h8V3M8 21v-7h8v7" /></svg>,
   export: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3" /></svg>,
   reset: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>,
+  undo: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>,
+  redo: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14l5-5-5-5" /><path d="M20 9H9a5 5 0 0 0 0 10h3" /></svg>,
 };
 
 // Thanh dưới: Tự xoay · Reset màu xe · Lưu màu · Xuất file. Xoay/zoom xe bằng chuột; hoàn tác bằng Ctrl+Z / Ctrl+Y.
 export function Toolbar() {
   const { autoRotate, toggleAutoRotate } = useViewer();
   const code = useDesign(s => s.code);
+  const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0);
   const { undo, redo, resetAll, save } = useDesign.getState();
+  const touch = useMedia(TOUCH_QUERY);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -44,6 +49,11 @@ export function Toolbar() {
 
   return (
     <div className="toolbar"><div className="panel">
+      {touch && <>
+        <button className="tb" aria-label={t.mobile.undo} disabled={!canUndo} onClick={undo}>{Icon.undo}</button>
+        <button className="tb" aria-label={t.mobile.redo} disabled={!canRedo} onClick={redo}>{Icon.redo}</button>
+        <span className="sep" />
+      </>}
       <button className={'tb' + (autoRotate ? ' active' : '')} onClick={toggleAutoRotate}>{Icon.rotate}<span>{t.autoRotate}</span></button>
       <span className="sep" />
       <button className="tb" title={t.resetHint} onClick={() => { resetAll(); toast(t.resetDone); }}>{Icon.reset}<span>{t.reset}</span></button>
@@ -69,7 +79,8 @@ export function HoverTip() {
 // Công tắc Màu sơn / Decal + dòng gợi ý theo chế độ
 export function ModeSwitch() {
   const mode = useDesign(s => s.mode), selected = useDesign(s => s.selected), setMode = useDesign(s => s.setMode);
-  const hint = mode === 'decal' ? t.decalHint : selected ? null : t.hint;
+  const touch = useMedia(TOUCH_QUERY);
+  const hint = mode === 'decal' ? (touch ? t.mobile.decalHint : t.decalHint) : selected ? null : touch ? t.mobile.hint : t.hint;
   return (
     <div className="mode">
       {/* tab chữ + vạch sáng trượt dưới tab đang chọn (không đóng khung nút) */}

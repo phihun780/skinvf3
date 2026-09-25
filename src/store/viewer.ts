@@ -1,4 +1,4 @@
-// Trạng thái khung nhìn 3D: yêu cầu chuyển góc camera, tự xoay.
+// Trạng thái khung nhìn 3D: yêu cầu chuyển góc camera, tự xoay, trình phối toàn màn hình (điện thoại).
 import { create } from 'zustand';
 
 export const VIEWS = {
@@ -18,6 +18,10 @@ interface ViewerState {
   goTo: (view: ViewId) => void;
   clearView: () => void;
   toggleAutoRotate: () => void;
+  full: boolean;            // điện thoại: trình phối đang mở toàn màn hình
+  setFull: (full: boolean) => void;
+  sheetMin: boolean;        // màn hẹp: bảng decal đang thu gọn → camera không cần dời xe lên
+  setSheetMin: (v: boolean) => void;
 }
 
 export const useViewer = create<ViewerState>(set => ({
@@ -27,4 +31,8 @@ export const useViewer = create<ViewerState>(set => ({
   goTo: view => set(s => ({ view, request: s.request + 1 })),
   clearView: () => set({ view: null }),
   toggleAutoRotate: () => set(s => ({ autoRotate: !s.autoRotate })),
+  full: false,
+  setFull: full => set({ full }),
+  sheetMin: false,
+  setSheetMin: sheetMin => set({ sheetMin }),
 }));

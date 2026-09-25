@@ -79,6 +79,7 @@ function Editor({ token, onLogout }: { token: string; onLogout: (msg?: string) =
   const [look, setLook] = useState(0);
   const [cycle, setCycle] = useState(false);
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [showPreview, setShowPreview] = useState(false);   // màn hẹp: xem trước mở thành lớp phủ toàn màn hình
 
   useEffect(() => {
     cmsApi.load().then(c => { setSaved(c); setDraft(c); }).catch(e => { setLoadErr((e as Error).message); setSaved(DEFAULT_CONTENT); });
@@ -133,13 +134,14 @@ function Editor({ token, onLogout }: { token: string; onLogout: (msg?: string) =
 
   return (
     <CmsCtx.Provider value={ctx}>
-      <div className="cms mesh-bg">
+      <div className={'cms mesh-bg' + (showPreview ? ' show-preview' : '')}>
         <header className="cms-top">
           <div className="logo"><span className="logo-mark">{BRAND.mark}</span><span>{BRAND.name}<small>Quản lý nội dung</small></span></div>
           <span className={'cms-status' + (dirty ? ' dirty' : '')}>
             {!saved ? 'Đang tải…' : dirty ? 'Có thay đổi chưa lưu' : saved.updatedAt ? 'Đã xuất bản · ' + fmtTime(saved.updatedAt) : 'Đang dùng nội dung mặc định'}
           </span>
           <div className="cms-actions">
+            <button className="btn sm cms-preview-btn" onClick={() => { setShowPreview(true); setDevice('mobile'); }}>Xem trước</button>
             <a className="btn sm" href="/" target="_blank" rel="noreferrer">Xem web ↗</a>
             <button className="btn sm" disabled={!dirty} onClick={() => { if (saved && confirm('Bỏ mọi thay đổi chưa lưu?')) setDraft(saved); }}>Huỷ thay đổi</button>
             <button className="btn primary sm" disabled={!dirty || saving} onClick={save}>{saving ? 'Đang lưu…' : 'Lưu & xuất bản'}</button>
@@ -175,6 +177,7 @@ function Editor({ token, onLogout }: { token: string; onLogout: (msg?: string) =
               <button className={device === 'mobile' ? 'on' : ''} onClick={() => setDevice('mobile')}>Điện thoại</button>
             </div>
             {section === 'hero' && <label className="cms-check"><input type="checkbox" checked={cycle} onChange={e => setCycle(e.target.checked)} />Tự đổi màu xe</label>}
+            <button className="cms-icon cms-preview-close" aria-label="Đóng xem trước" onClick={() => setShowPreview(false)}>✕</button>
           </div>
           <Preview content={draft} focusLook={section === 'hero' && !cycle ? lookIdx : null} section={section} device={device} />
         </section>

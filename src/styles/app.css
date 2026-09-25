@@ -48,6 +48,7 @@ body.locked { overflow: hidden; }  /* trang trình phối: chiếm trọn màn h
 .route-fallback { position: fixed; inset: 0; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
+* { -webkit-tap-highlight-color: transparent; }  /* điện thoại: bỏ ô xám khi chạm */
 button:disabled { cursor: default; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 ::selection { background: var(--accent-soft); }
@@ -246,13 +247,13 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
   .credit { display: none; }  /* credit vẫn có trên poster và trang giới thiệu */
 }
 @media (max-width: 900px) {
-  .nav a:not(:last-of-type), .nav-pill { display: none; }  /* màn hẹp: chỉ giữ mục Tự phối màu */
-  .nav a:last-of-type { padding: 8px 12px; color: var(--text); }
+  .topbar .nav { display: none; }       /* màn hẹp: menu gọn trong nút ☰ (.menu-btn → .mnav, hiện ở dưới) */
   .topbar { gap: 12px; }
 }
 @media (max-width: 640px) {
   :root { --gutter: 12px; }
-  .logo > span:not(.logo-mark) { display: none; }  /* chỉ giữ ô logo */
+  .logo small { display: none; }  /* giữ tên, bỏ dòng sub */
+  .logo { font-size: 15px; gap: 10px; }
   .topbar { height: 64px; }
   .topbar .btn { height: 34px; padding: 0 12px; font-size: 12px; }
   .topbar .btn.primary { font-size: 10px; letter-spacing: 0.06em; }
@@ -269,6 +270,29 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
 }
 @keyframes slide-up { from { opacity: 0; transform: translateY(24px); } }
 
+/* ---- menu điện thoại: nút ☰ + bảng kính thả xuống ---- */
+.menu-btn { display: none; margin-left: auto; width: 42px; height: 42px; place-content: center; gap: 5px; padding: 0; border-radius: 12px;
+  border: 1px solid var(--line-2); background: rgba(255,255,255,0.06); }
+.menu-btn i { display: block; width: 18px; height: 1.8px; border-radius: 2px; background: #fff; transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .2s; }
+.menu-open .menu-btn i:nth-child(1) { transform: translateY(6.8px) rotate(45deg); }
+.menu-open .menu-btn i:nth-child(2) { opacity: 0; }
+.menu-open .menu-btn i:nth-child(3) { transform: translateY(-6.8px) rotate(-45deg); }
+@media (max-width: 900px) { .menu-btn { display: grid; } }
+.mnav { position: absolute; top: calc(100% + 6px); left: var(--gutter); right: var(--gutter); display: flex; flex-direction: column; padding: 8px; border-radius: 20px;
+  background: linear-gradient(160deg, #0b2066, #06134a);  /* nền đặc: nằm trong thanh trên (đã làm mờ nền) nên không làm mờ lồng được */
+  border: 1px solid var(--glass-border); border-top-color: var(--glass-edge); box-shadow: var(--glass-shadow);
+  opacity: 0; transform: translateY(-8px) scale(.98); transform-origin: top right; pointer-events: none; visibility: hidden;
+  transition: opacity .22s ease, transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s .28s; }
+.mnav.open { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition: opacity .22s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+.mnav a { display: flex; align-items: center; min-height: 50px; padding: 0 16px; border-radius: 14px; font-size: 16px; font-weight: 600; color: var(--muted); }
+.mnav a.active { color: #fff; background: rgba(255,255,255,0.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16); }
+.mnav a:active { background: rgba(255,255,255,0.14); }
+
+/* ---- màn cảm ứng: bỏ hiệu ứng rê chuột ---- */
+@media (hover: none) {
+  .swatch:hover { transform: none; }
+}
+
 /* ---- khung biến đổi decal trên xe, kiểu Photoshop (DecalGizmo) ---- */
 .gizmo { position: relative; width: 0; height: 0; pointer-events: none; }
 .gizmo-svg { position: absolute; left: -1px; top: -1px; overflow: visible; pointer-events: none; }
@@ -282,3 +306,12 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
 .gizmo-del:hover { background: #ff4d6a; }
 .gizmo-del svg { width: 13px; height: 13px; }
 body.gizmo-dragging * { cursor: inherit !important; user-select: none; }
+
+/* màn cảm ứng (đặt cuối file để đè quy tắc gốc): ô nhập ≥ 16px (iOS không tự phóng to khi gõ), tay cầm khung decal to cho ngón tay */
+@media (pointer: coarse) {
+  input[type=text], input[type=number], input[type=password], textarea, select { font-size: 16px !important; }
+  .gizmo-edge { stroke-width: 26; }
+  .gizmo-del { width: 32px; height: 32px; left: -16px; top: -16px; }
+  .gizmo-del svg { width: 15px; height: 15px; }
+  .gizmo-svg * { touch-action: none; }
+}

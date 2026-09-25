@@ -3,6 +3,18 @@ export const vi = {
   nav: { home: 'Trang chủ', features: 'Tính năng', gallery: 'Mẫu tham khảo', configurator: 'Tự phối màu' },
   loading: { model: 'Đang tải model…', ready: 'Sẵn sàng' },
   hint: 'Kéo để xoay xe · Ctrl + lăn chuột để phóng to · Bấm lên xe để đổi màu',
+  // điện thoại (màn cảm ứng)
+  mobile: {
+    start: 'Bắt đầu phối',
+    startHint: 'Mở toàn màn hình · kéo để xoay · 2 ngón để phóng to',
+    hint: 'Chạm lên xe để đổi màu · 2 ngón để phóng to',
+    decalHint: 'Chọn decal rồi chạm lên xe để dán',
+    undo: 'Hoàn tác',
+    redo: 'Làm lại',
+    expand: 'Mở rộng bảng',
+    collapse: 'Thu gọn bảng',
+    placeHint: (label: string) => `Chạm lên xe để dán “${label}”`,
+  },
   code: 'Mã',
   save: 'Lưu màu',
   saved: (code: string) => `Đã lưu thiết kế ${code} trong trình duyệt`,

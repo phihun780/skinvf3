@@ -7,6 +7,9 @@ import * as THREE from 'three';
 import { Car } from './Car';
 import { Lights, fitDistance } from './Studio';
 import type { DesignConfig } from '../config/zones';
+import { isTouch } from '../ui/device';
+
+const TOUCH = isTouch();  // điện thoại: độ phân giải + bóng đổ thấp hơn cho mượt
 
 const SPEED = 0.16;        // rad/s
 export const START_ANGLE = 0.62;
@@ -56,7 +59,7 @@ export function HeroCar({ config, onReady, onCapture, active = true }: HeroCarPr
   const [box, setBox] = useState<THREE.Box3 | null>(null);
   return (
     <Canvas
-      shadows dpr={[1, 2]} frameloop={active ? 'always' : 'never'} camera={{ fov: 26, near: 0.05, far: 60, position: [4, 1.5, 5] }}
+      shadows dpr={[1, TOUCH ? 1.5 : 2]} frameloop={active ? 'always' : 'never'} camera={{ fov: 26, near: 0.05, far: 60, position: [4, 1.5, 5] }}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping }}
       style={{ pointerEvents: 'none' }}
     >
@@ -64,7 +67,7 @@ export function HeroCar({ config, onReady, onCapture, active = true }: HeroCarPr
       <Suspense fallback={null}><Car showcase={config} onLoaded={setBox} /></Suspense>
       {box && (
         <>
-          <ContactShadows position={[0, box.min.y + 0.002, 0]} opacity={0.75} scale={7} blur={2.4} far={1.6} resolution={1024} color="#010516" />
+          <ContactShadows position={[0, box.min.y + 0.002, 0]} opacity={0.75} scale={7} blur={2.4} far={1.6} resolution={TOUCH ? 512 : 1024} color="#010516" />
           <Turntable box={box} onReady={onReady} onCapture={onCapture} />
         </>
       )}

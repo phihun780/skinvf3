@@ -11,6 +11,10 @@ import { useViewer, VIEWS, type ViewId } from '../store/viewer';
 import { useDesign } from '../store/design';
 import { LAYOUT, frameLeft } from '../config/layout';
 import { snapshotter } from './snapshot';
+import { isTouch } from '../ui/device';
+
+// điện thoại: độ phân giải khung 3D + bóng đổ thấp hơn (mượt, đỡ nóng máy), chụm 2 ngón để phóng to
+const TOUCH = isTouch();
 
 // Phần khung (toạ độ NDC) dành cho xe: chừa chỗ cho thanh trên/dưới. Bề ngang tính theo khung giao diện
 // (tối đa LAYOUT.frame px) để màn hình rộng không làm xe to bè ra hai bên.
@@ -35,7 +39,7 @@ export function fitDistance(box: THREE.Box3, target: THREE.Vector3, dir: THREE.V
 function CameraRig({ box, onPlaced }: { box: THREE.Box3; onPlaced: () => void }) {
   const camera = useThree(s => s.camera) as THREE.PerspectiveCamera;
   const controls = useRef<OrbitControlsImpl>(null);
-  const { view, request, autoRotate, clearView } = useViewer();
+  const { view, request, autoRotate, clearView, full } = useViewer();
   const target = useRef(new THREE.Vector3()).current;
   const tween = useRef<{ a: THREE.Spherical; b: THREE.Spherical; dt: number; t0: number } | null>(null);
   const dragging = useRef(false);
@@ -80,7 +84,8 @@ function CameraRig({ box, onPlaced }: { box: THREE.Box3; onPlaced: () => void })
     return { x: w / 2 - (left + panelLeft - LAYOUT.gutter) / 2, y: 0 };
   };
   useFrame((_, delta) => {
-    const st = useDesign.getState(), panelOpen = !!st.selected || st.mode === 'decal';  // chế độ decal: panel decal luôn mở
+    // chế độ decal: panel decal luôn mở (trừ khi đang thu gọn trên điện thoại)
+    const st = useDesign.getState(), panelOpen = !!st.selected || (st.mode === 'decal' && !useViewer.getState().sheetMin);
     const want = panelOpen ? panelShift(size.width, size.height) : { x: 0, y: 0 };
     const cur = shift.current, v = camera.view;
     const settled = Math.abs(want.x - cur.x) < 0.5 && Math.abs(want.y - cur.y) < 0.5;
@@ -137,7 +142,8 @@ function CameraRig({ box, onPlaced }: { box: THREE.Box3; onPlaced: () => void })
 
   return (
     <OrbitControls
-      ref={controls} makeDefault enablePan={false} enableZoom={false} enableDamping dampingFactor={0.08}
+      // chụm 2 ngón để phóng to: chỉ khi mở toàn màn hình trên điện thoại (máy tính: Ctrl + lăn chuột, lăn thường = cuộn trang)
+      ref={controls} makeDefault enablePan={false} enableZoom={full && TOUCH} enableDamping dampingFactor={0.08}
       minPolarAngle={0.15} maxPolarAngle={Math.PI / 2 - 0.04} autoRotate={autoRotate} autoRotateSpeed={0.8}
       // chỉ coi là "tự xoay" khi thật sự kéo (bấm chọn vùng cũng phát 'start' nhưng không có 'change')
       onStart={() => { dragging.current = true; }}
@@ -173,7 +179,7 @@ export function Studio({ active = true }: { active?: boolean }) {
   const down = useRef<[number, number] | null>(null);
   return (
     <Canvas
-      shadows dpr={[1, 2]} frameloop={active ? 'always' : 'never'}
+      shadows dpr={[1, TOUCH ? 1.5 : 2]} frameloop={active ? 'always' : 'never'}
       style={{ opacity: placed ? 1 : 0, transition: 'opacity .6s ease' }}
       camera={{ fov: 28, near: 0.05, far: 60, position: [4, 2, 5] }}
       gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, preserveDrawingBuffer: true }}
@@ -187,7 +193,7 @@ export function Studio({ active = true }: { active?: boolean }) {
       </Suspense>
       {box && (
         <>
-          <ContactShadows position={[0, box.min.y + 0.002, 0]} opacity={0.7} color="#010516" scale={7} blur={2.2} far={1.6} resolution={1024} />
+          <ContactShadows position={[0, box.min.y + 0.002, 0]} opacity={0.7} color="#010516" scale={7} blur={2.2} far={1.6} resolution={TOUCH ? 512 : 1024} />
           <CameraRig box={box} onPlaced={() => setPlaced(true)} />
           <Decals />
           <DecalController />
