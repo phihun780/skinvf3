@@ -77,7 +77,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     items: [
       { icon: 'cursor', title: 'Chọn vùng trên xe', text: 'Rê chuột lên xe, vùng nào sáng lên là vùng đó: thân, nóc, capo, cản, ốp vòm, gương, mâm, cùm phanh…' },
       { icon: 'palette', title: 'Phối màu & dán decal', text: 'Chọn màu và chất bề mặt, dán decal có sẵn, ảnh PNG/JPG/WEBP của bạn hoặc chữ tuỳ ý.' },
-      { icon: 'poster', title: 'Tải hình ảnh SkinVF3 mang ra tiệm', text: 'Hình ảnh SkinVF3 khổ A4 gồm 5 góc nhìn, mã màu HEX từng vùng và vị trí, kích thước từng decal.' },
+      { icon: 'poster', title: 'Tải hình ảnh SkinVF3 mang ra tiệm', text: 'Hình ảnh SkinVF3 khổ A4 gồm 5 góc nhìn và các ô màu có trong thiết kế kèm mã HEX.' },
     ],
   },
   gallery: {
@@ -90,7 +90,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     title: 'Câu hỏi thường gặp',
     items: [
       { q: 'Màu trên màn hình có giống màu thật không?', a: 'Gần đúng, nhưng màn hình và ánh sáng khác nhau sẽ làm màu lệch. Hãy dùng mã màu trên hình ảnh SkinVF3 để đối chiếu với bảng màu decal thật tại tiệm.', links: [] },
-      { q: 'Hình ảnh SkinVF3 dùng để làm gì?', a: 'Hình ảnh SkinVF3 gom 5 góc nhìn, bảng màu từng vùng và danh sách decal (vị trí, kích thước). Thợ nhìn là biết cần dán gì, ở đâu — báo giá nhanh hơn.', links: [] },
+      { q: 'Hình ảnh SkinVF3 dùng để làm gì?', a: 'Hình ảnh SkinVF3 gom 5 góc nhìn của xe và các ô màu có trong thiết kế kèm mã HEX. Thợ nhìn là biết cần dán gì, màu nào — báo giá nhanh hơn.', links: [] },
       { q: 'Tôi dán ảnh của mình được không?', a: 'Được. Trình phối nhận ảnh PNG, JPG hoặc WEBP (ảnh PNG/WEBP nền trong suốt sẽ giữ nguyên phần trong suốt), và cả chữ tuỳ ý.', links: [] },
       { q: 'Có cần tạo tài khoản không?', a: 'Không. Thiết kế tự lưu trong trình duyệt trên máy bạn. Xoá dữ liệu trình duyệt thì thiết kế cũng mất — nhớ tải hình ảnh SkinVF3 để giữ lại.', links: [] },
       { q: 'Mô hình 3D lấy ở đâu?', a: 'Mô hình gốc là “Vinfast VF3 Plus 2026” của tác giả Hoàng Huy, chia sẻ trên Sketchfab theo giấy phép Creative Commons Attribution 4.0 (CC BY 4.0) — được phép dùng và chỉnh sửa, kể cả cho mục đích thương mại, với điều kiện ghi rõ tên tác giả. SkinVF3 đã tuỳ chỉnh lại chi tiết bằng Claude AI (Anthropic): chia lại từng vùng theo khớp nối của xe thật, cắt và bo mượt các đường nối, tối ưu dung lượng để web tải nhanh. Cảm ơn tác giả Hoàng Huy!',

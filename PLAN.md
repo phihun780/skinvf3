@@ -114,7 +114,7 @@ Web **1 trang** (`src/pages/Home.tsx`): Hero · Tính năng cơ bản (#tinh-nan
 0. Mockup giao diện (trang chủ + trình phối) để duyệt phong cách, bố cục.
 1. Script tách model + khung React/R3F + viewer studio + đổi màu/chất theo vùng. ✅ (model 14.7MB → 2.44MB; rê sáng vùng, bấm hiện bảng màu tại chỗ, 6 góc nhìn, tự xoay, hoàn tác/làm lại, tự lưu)
 2. Decal (thư viện, upload, chữ). ✅ (chiếu lên bề mặt sơn + ốp nhựa bằng DecalGeometry; thư viện SVG `public/decals/` khai báo ở `src/config/decals.ts`; tải PNG/JPG/WEBP ≤ 15MB → thu còn ≤ 1024px, lưu WebP; chữ 3 kiểu; kéo để di chuyển; kích thước/xoay/độ đậm/lật/chép sang bên kia/lớp/xoá; hoàn tác chung với màu)
-3. Xuất ảnh + poster. ✅ (dọc A4 300dpi 2480×3508 PNG, ghép bằng canvas 2D ở `src/poster/renderPoster.ts`; ảnh 3/4 trước + 4 góc chụp riêng nền trong suốt; bảng màu theo nhóm; decal kèm vị trí dán, kích thước cm; màu poster ở `src/config/poster.ts`)
+3. Xuất Hình ảnh SkinVF3. ✅ (dọc A4 300dpi 2480×3508 PNG + bản nhẹ JPG, ghép bằng canvas 2D ở `src/poster/renderPoster.ts`; ảnh 3/4 trước + 4 góc chụp riêng nền trong suốt; bên dưới là các ô màu có trong thiết kế (không trùng) kèm mã HEX, ít màu thì ô to, nhiều màu tự chia 2 hàng; không liệt kê decal; màu nền ở `src/config/poster.ts`)
 4. Trang chủ, Thư viện mẫu, Hướng dẫn/FAQ. 🟡 Trang chủ `/` xong (hero xe 3D tự xoay + đổi mẫu, cách dùng, bento tính năng, thư viện mẫu → `/phoi-xe?preset=<id>`, hỏi đáp, kêu gọi, footer). Thư viện mẫu & hỏi đáp hiện là mục trên trang chủ.
 5. CMS `/cms` (Cloudflare Pages Functions + R2). ✅ Toàn bộ các mục trang chủ.
 6. Hoàn thiện: tối ưu tốc độ, responsive cơ bản, SEO, deploy + tên miền.

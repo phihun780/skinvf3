@@ -21,7 +21,7 @@ export async function exportPoster() {
   await nextFrame();
   try {
     const date = new Date();
-    const canvas = await renderPoster({ config: d.config, decals: d.decals, code: d.code, date });
+    const canvas = await renderPoster({ config: d.config, code: d.code, date });
     const toBlob = (type: string, q?: number) => new Promise<Blob>((ok, fail) => canvas.toBlob(b => b ? ok(b) : fail(new Error('toBlob')), type, q));
     const [png, jpg] = await Promise.all([toBlob('image/png'), toBlob('image/jpeg', 0.88)]);
     usePoster.setState({ busy: false, url: URL.createObjectURL(png), lite: URL.createObjectURL(jpg), name: posterFileName(d.code, date) });

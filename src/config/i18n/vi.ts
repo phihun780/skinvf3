@@ -36,10 +36,7 @@ export const vi = {
   poster: {
     subtitle: 'Bản phối ngoại thất VinFast VF3',
     codeLabel: 'Mã thiết kế',
-    colors: 'Bảng màu theo vùng',
-    decals: (n: number) => `Decal (${n})`,
-    noDecals: 'Không có decal.',
-    moreDecals: (n: number) => `+ ${n} decal khác`,
+    colors: (n: number) => `Màu sử dụng (${n})`,
     disclaimer: 'Màu hiển thị trên màn hình có thể khác màu decal / sơn thực tế — hãy đối chiếu mã màu với bảng màu tại tiệm.',
     title: 'Hình ảnh SkinVF3',
     rendering: 'Đang tạo hình ảnh SkinVF3…',

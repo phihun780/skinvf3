@@ -1,14 +1,10 @@
-// Ghép poster dọc A4 (300dpi) bằng canvas 2D: header thương hiệu, ảnh lớn + 4 góc, bảng màu theo vùng, danh sách decal.
+// Ghép Hình ảnh SkinVF3 dọc A4 (300dpi) bằng canvas 2D: header thương hiệu, ảnh lớn + 4 góc, các ô màu có trong thiết kế (kèm mã HEX).
 // Style giống web: nền mesh gradient xanh, ảnh xe (nền trong suốt từ snapshotter) đặt trong khung glass.
 import { BRAND } from '../config/brand';
-import { EDITABLE, GROUPS, zoneInfo, type DesignConfig, type ZoneGroup } from '../config/zones';
-import { FINISHES } from '../config/finishes';
-import { colorName } from '../config/palette';
+import { EDITABLE, type DesignConfig } from '../config/zones';
 import { POSTER } from '../config/poster';
-import type { Decal } from '../store/design';
 import type { ViewId } from '../store/viewer';
 import { snapshotter } from '../three/snapshot';
-import { MIRROR_X } from '../config/decals';
 import { t } from '../config/i18n/vi';
 
 const { W, H, M } = POSTER;
@@ -78,35 +74,43 @@ function eyebrow(g: CanvasRenderingContext2D, text: string, x: number, y: number
   g.letterSpacing = '6px'; g.fillText(text.toUpperCase(), x, y); g.letterSpacing = '0px';
 }
 
-/** Cắt chữ cho vừa bề ngang (thêm “…”). */
-function fit(g: CanvasRenderingContext2D, text: string, maxW: number) {
-  if (g.measureText(text).width <= maxW) return text;
-  while (text.length > 1 && g.measureText(text + '…').width > maxW) text = text.slice(0, -1);
-  return text + '…';
+/** Các màu có trong thiết kế (không trùng), theo thứ tự vùng: thân xe trước. */
+function usedColors(config: DesignConfig) {
+  const seen = new Set<string>();
+  for (const id of EDITABLE) { const c = config[id]?.color?.toLowerCase(); if (c) seen.add(c); }
+  return [...seen];
 }
 
-/** Vị trí dán theo hướng bề mặt (trục world: +X = bên trái xe, +Y = lên, +Z = đầu xe). */
-function placeOf(d: Decal) {
-  const [nx, ny, nz] = d.normal.map(Math.abs);
-  if (ny >= nx && ny >= nz) return d.position[2] > 0.9 ? 'nắp capo' : 'nóc';
-  if (nx >= nz) return d.position[0] > MIRROR_X ? 'bên trái' : 'bên phải';
-  return d.normal[2] > 0 ? 'đầu xe' : 'đuôi xe';
+/** Ô màu: khối màu bo góc (có ánh sáng nhẹ như mẫu màu thật) + mã HEX bên dưới. */
+function drawSwatch(g: CanvasRenderingContext2D, hex: string, x: number, y: number, w: number, h: number, r: number, labelPx: number) {
+  g.save();
+  roundRect(g, x, y, w, h, r);
+  g.shadowColor = 'rgba(1,4,24,0.5)'; g.shadowBlur = 40; g.shadowOffsetY = 16;
+  g.fillStyle = hex; g.fill();
+  g.shadowColor = 'transparent';
+  const shine = g.createLinearGradient(x, y, x, y + h);
+  shine.addColorStop(0, 'rgba(255,255,255,0.22)'); shine.addColorStop(0.45, 'rgba(255,255,255,0)'); shine.addColorStop(1, 'rgba(0,0,0,0.12)');
+  g.fillStyle = shine; g.fill();
+  g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = 2.5; g.stroke();
+  g.restore();
+  g.font = font(700, labelPx); g.fillStyle = C.text; g.textAlign = 'center'; g.letterSpacing = '3px';
+  g.fillText(hex.toUpperCase(), x + w / 2, y + h + labelPx + 22);
+  g.letterSpacing = '0px'; g.textAlign = 'left';
 }
 
-export interface PosterInput { config: DesignConfig; decals: Decal[]; code: string; date?: Date }
+export interface PosterInput { config: DesignConfig; code: string; date?: Date }
 
-export async function renderPoster({ config, decals, code, date = new Date() }: PosterInput): Promise<HTMLCanvasElement> {
+export async function renderPoster({ config, code, date = new Date() }: PosterInput): Promise<HTMLCanvasElement> {
   if (!snapshotter.take) throw new Error('Xe chưa tải xong');
   await Promise.all([300, 400, 500, 600, 700, 800].flatMap(w => [document.fonts.load(font(w, 40), 'Đ'), document.fonts.load(display(w, 40), 'Đ')]));
 
   // ---- chụp ảnh các góc
-  const HERO = { x: M, y: 390, w: W - 2 * M, h: 1100 };
-  const GAP = 40, SMALL_W = (W - 2 * M - 3 * GAP) / 4, SMALL = { y: HERO.y + HERO.h + GAP, h: 400 };
+  const HERO = { x: M, y: 390, w: W - 2 * M, h: 1400 };
+  const GAP = 40, SMALL_W = (W - 2 * M - 3 * GAP) / 4, SMALL = { y: HERO.y + HERO.h + GAP, h: 520 };
   const smallViews: ViewId[] = ['front', 'side', 'rear', 'rear34'];
   const [heroUrl] = snapshotter.take(['front34'], HERO.w, HERO.h);
   const smallUrls = snapshotter.take(smallViews, Math.round(SMALL_W * 2), SMALL.h * 2);  // chụp 2x rồi thu nhỏ: nét hơn
   const [heroImg, ...smallImgs] = await Promise.all([heroUrl, ...smallUrls].map(loadImage));
-  const decalImgs = await Promise.all(decals.map(d => loadImage(d.src).catch(() => null)));
 
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d')!;
@@ -139,67 +143,30 @@ export async function renderPoster({ config, decals, code, date = new Date() }: 
   drawShot(g, heroImg, HERO.x, HERO.y, HERO.w, HERO.h, t.views.front34, true);
   smallImgs.forEach((img, i) => drawShot(g, img, M + i * (SMALL_W + GAP), SMALL.y, SMALL_W, SMALL.h, t.views[smallViews[i]]));
 
-  // ---- bảng màu (cột trái)
-  // 2 tấm glass: bảng màu (trái) + decal (phải), cao tới sát chân trang
-  const TOP = SMALL.y + SMALL.h + 150, FY = H - 150, PAD = 50;
-  const LP = { x: M, y: TOP - 90, w: 1360 }, RP = { x: M + 1400, y: TOP - 90, w: W - 2 * M - 1400 };
-  const PH = FY - 50 - LP.y;
-  glass(g, LP.x, LP.y, LP.w, PH, 32); glass(g, RP.x, RP.y, RP.w, PH, 32);
-  const X0 = LP.x + PAD, COL_L = LP.w - 2 * PAD, ROW = 58;
-  eyebrow(g, t.poster.colors, X0, TOP);
-  let y = TOP + 40;
-  for (const group of Object.keys(GROUPS) as ZoneGroup[]) {
-    const ids = EDITABLE.filter(id => zoneInfo(id)?.group === group);
-    if (!ids.length) continue;
-    y += 34;
-    g.font = display(700, 22); g.fillStyle = C.accent2; g.letterSpacing = '5px'; g.fillText(GROUPS[group].toUpperCase(), X0, y); g.letterSpacing = '0px';
-    y += 14;
-    for (const id of ids) {
-      const s = config[id]; if (!s) continue;
-      const cy = y + ROW / 2;
-      g.beginPath(); g.arc(X0 + 20, cy, 19, 0, Math.PI * 2); g.fillStyle = s.color; g.fill();
-      g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; g.stroke();
-      g.textBaseline = 'middle';
-      g.font = font(600, 31); g.fillStyle = C.text; g.fillText(fit(g, zoneInfo(id)!.name, 560), X0 + 60, cy);
-      g.textAlign = 'right'; g.font = font(400, 27); g.fillStyle = C.muted;
-      g.fillText(`${colorName(s.color)} · ${s.color.toUpperCase()} · ${FINISHES[s.finish]?.name ?? s.finish}`, X0 + COL_L, cy);
-      g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-      g.fillStyle = C.lineSoft; g.fillRect(X0 + 60, y + ROW, COL_L - 60, 1);
-      y += ROW;
-    }
+  // ---- màu sử dụng: 1 tấm glass tới sát chân trang, các ô màu căn giữa (ít màu → ô to, nhiều màu → ô nhỏ)
+  const FY = H - 150, PAD = 56;
+  const PY = SMALL.y + SMALL.h + 60;
+  const P = { x: M, y: PY, w: W - 2 * M, h: FY - 50 - PY };
+  glass(g, P.x, P.y, P.w, P.h, 32);
+  const colors = usedColors(config);
+  eyebrow(g, t.poster.colors(colors.length), P.x + PAD, P.y + PAD + 26);
+  const n = colors.length;
+  const cols = n <= 4 ? 4 : n <= 6 ? 6 : 8;
+  const SG = cols === 8 ? 30 : 40;                                     // khoảng cách giữa các ô
+  const SW = (P.w - 2 * PAD - (cols - 1) * SG) / cols;                 // bề ngang 1 ô
+  const SH = cols === 4 ? 300 : cols === 6 ? 230 : 160, LBL = cols === 8 ? 30 : 36;
+  const TILE_H = SH + LBL + 40, ROW_GAP = 34;
+  const rows = Math.ceil(n / cols);
+  const areaTop = P.y + PAD + 70, areaH = P.y + P.h - PAD - areaTop;
+  const gridH = rows * TILE_H + (rows - 1) * ROW_GAP;
+  let gy = areaTop + Math.max(0, (areaH - gridH) / 2);
+  for (let r = 0; r < rows; r++) {
+    const row = colors.slice(r * cols, (r + 1) * cols);
+    const rowW = row.length * SW + (row.length - 1) * SG;
+    let gx = P.x + (P.w - rowW) / 2;                                   // căn giữa từng hàng
+    for (const hex of row) { drawSwatch(g, hex, gx, gy, SW, SH, 26, LBL); gx += SW + SG; }
+    gy += TILE_H + ROW_GAP;
   }
-
-  // ---- decal (cột phải)
-  const DX = RP.x + PAD, DW = RP.w - 2 * PAD, DROW = 124, TH = { w: 150, h: 100 };
-  eyebrow(g, t.poster.decals(decals.length), DX, TOP);
-  let dy = TOP + 48;
-  if (!decals.length) { g.font = font(400, 28); g.fillStyle = C.faint; g.fillText(t.poster.noDecals, DX, dy + 40); }
-  const maxRows = Math.floor((RP.y + PH - PAD - dy) / DROW);
-  const shown = decals.length > maxRows ? maxRows - 1 : decals.length;
-  decals.slice(0, shown).forEach((d, i) => {
-    const img = decalImgs[i];
-    // ô ảnh nền ô cờ để thấy phần trong suốt
-    g.save(); roundRect(g, DX, dy, TH.w, TH.h, 12); g.clip();
-    for (let cx = 0; cx < TH.w; cx += 16) for (let cy2 = 0; cy2 < TH.h; cy2 += 16) {
-      g.fillStyle = ((cx + cy2) / 16) % 2 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.14)'; g.fillRect(DX + cx, dy + cy2, 16, 16);
-    }
-    if (img) {
-      const k = Math.min((TH.w - 16) / img.naturalWidth, (TH.h - 16) / img.naturalHeight);
-      const iw = img.naturalWidth * k, ih = img.naturalHeight * k;
-      g.save();
-      g.translate(DX + TH.w / 2, dy + TH.h / 2); if (d.flip) g.scale(-1, 1);
-      g.globalAlpha = d.opacity; g.drawImage(img, -iw / 2, -ih / 2, iw, ih);
-      g.restore();
-    }
-    g.restore();
-    g.font = font(700, 30); g.fillStyle = C.text; g.fillText(fit(g, d.label, DW - TH.w - 30), DX + TH.w + 28, dy + 42);
-    const heightCm = Math.round(d.size / d.aspect * 100);
-    const info = [placeOf(d), `${Math.round(d.size * 100)} × ${heightCm} cm`, d.rotation ? `xoay ${Math.round(d.rotation)}°` : '', d.flip ? 'lật' : '', d.opacity < 1 ? `${Math.round(d.opacity * 100)}%` : '']
-      .filter(Boolean).join(' · ');
-    g.font = font(400, 25); g.fillStyle = C.muted; g.fillText(info, DX + TH.w + 28, dy + 82);
-    dy += DROW;
-  });
-  if (shown < decals.length) { g.font = font(500, 28); g.fillStyle = C.muted; g.fillText(t.poster.moreDecals(decals.length - shown), DX, dy + 40); }
 
   // ---- chân trang
   g.fillStyle = C.line; g.fillRect(M, FY, W - 2 * M, 2);
