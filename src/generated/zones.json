@@ -1,0 +1,112 @@
+[
+  {
+    "id": "body",
+    "name": "Thân xe (sơn chính)",
+    "group": "paint"
+  },
+  {
+    "id": "hood",
+    "name": "Nắp capo",
+    "group": "paint"
+  },
+  {
+    "id": "roof",
+    "name": "Nóc xe + cánh gió sau",
+    "group": "paint"
+  },
+  {
+    "id": "mirror",
+    "name": "Vỏ gương",
+    "group": "trim"
+  },
+  {
+    "id": "mirrorBase",
+    "name": "Chân gương",
+    "group": "trim"
+  },
+  {
+    "id": "aPillar",
+    "name": "Ốp tam giác trụ A",
+    "group": "trim"
+  },
+  {
+    "id": "bumperF",
+    "name": "Cản dưới + ốp vòm trước",
+    "group": "trim"
+  },
+  {
+    "id": "bumperR",
+    "name": "Cản sau + ốp vòm bánh sau",
+    "group": "trim"
+  },
+  {
+    "id": "skirt",
+    "name": "Ốp sườn (bậc cửa)",
+    "group": "trim"
+  },
+  {
+    "id": "grille",
+    "name": "Ca-lăng",
+    "group": "trim"
+  },
+  {
+    "id": "lowerF",
+    "name": "Ốp cản dưới trước",
+    "group": "trim"
+  },
+  {
+    "id": "lowerR",
+    "name": "Ốp cản dưới sau",
+    "group": "trim"
+  },
+  {
+    "id": "tire",
+    "name": "Lốp",
+    "group": "wheel"
+  },
+  {
+    "id": "rim",
+    "name": "Mâm (la-zăng)",
+    "group": "wheel"
+  },
+  {
+    "id": "hub",
+    "name": "Moay-ơ (sau mâm)",
+    "group": "wheel"
+  },
+  {
+    "id": "caliper",
+    "name": "Cùm phanh (heo dầu)",
+    "group": "wheel"
+  },
+  {
+    "id": "disc",
+    "name": "Đĩa phanh",
+    "group": "wheel"
+  },
+  {
+    "id": "nuts",
+    "name": "Ốc bánh + van",
+    "group": "wheel"
+  },
+  {
+    "id": "glass",
+    "name": "Kính xe",
+    "group": "detail"
+  },
+  {
+    "id": "chrome",
+    "name": "Nẹp chrome + logo V",
+    "group": "detail"
+  },
+  {
+    "id": "lights",
+    "name": "Cụm đèn",
+    "group": null
+  },
+  {
+    "id": "misc",
+    "name": "Khác (biển số, tấm gầm)",
+    "group": null
+  }
+]

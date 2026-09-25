@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VF3 Part Inspector</title>
+<style>
+  :root { --bg:#111418; --panel:#1a1f26; --line:#2a313b; --text:#e6e9ee; --muted:#8b95a3; --accent:#4da3ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:13px/1.4 system-ui,Segoe UI,sans-serif; display:flex; height:100vh; overflow:hidden; }
+  #view { flex:1; position:relative; }
+  canvas { display:block; }
+  aside { width:340px; background:var(--panel); border-left:1px solid var(--line); overflow:auto; padding:12px; }
+  h1 { font-size:15px; margin:0 0 8px; }
+  .row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  button { background:#232a33; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:5px 9px; cursor:pointer; font:inherit; }
+  button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .mesh { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:6px; cursor:pointer; }
+  .mesh:hover { background:#232a33; }
+  .mesh.sel { outline:1px solid var(--accent); }
+  .sw { width:14px; height:14px; border-radius:3px; flex:none; }
+  .mesh small { color:var(--muted); margin-left:auto; }
+  #info { position:absolute; left:12px; top:12px; background:#000a; padding:8px 10px; border-radius:6px; pointer-events:none; white-space:pre; font-family:ui-monospace,Consolas,monospace; font-size:12px; }
+  #status { position:absolute; left:12px; bottom:12px; color:var(--muted); }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="view"><div id="info">Click vào xe để xem mảng</div><div id="status">Đang tải model…</div></div>
+<aside>
+  <h1>VF3 – bóc tách mảng</h1>
+  <div class="row">
+    <button id="mZone">Vùng custom</button>
+    <button id="mMesh" class="on">Màu theo mesh</button>
+    <button id="mComp">Màu theo mảng rời</button>
+    <button id="mOrig">Material gốc</button>
+  </div>
+  <div class="row">
+    <button id="tEdges">Đường viền</button>
+    <button id="showAll">Hiện tất cả</button>
+  </div>
+  <div class="row">
+    <button data-cam="front">Trước</button><button data-cam="back">Sau</button>
+    <button data-cam="left">Trái</button><button data-cam="right">Phải</button>
+    <button data-cam="top">Trên</button><button data-cam="iso">3/4</button>
+  </div>
+  <div id="zones"></div>
+  <div id="list"></div>
+</aside>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { ZONES, segmentMesh } from '../shared/vf3-zones.js';
+
+window.THREE = THREE; // cho debug từ console
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+renderer.setPixelRatio(devicePixelRatio);
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2b3038);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const parts = [];      // { mesh, name, matName, tris, color, origMat, compCount, compOf, compTris }
+let mode = 'zone', edgesOn = false, selected = null, hoverZone = null;
+
+function paintZones() {
+  const grey = new THREE.Color(0x555a62);
+  for (const p of parts) {
+    const attr = p.mesh.geometry.attributes.color;
+    for (let v = 0; v < attr.count; v++) {
+      const z = p.zoneOf[v];
+      const c = z < 0 ? grey : (hoverZone !== null && hoverZone !== z) ? grey : ZONES[z].c;
+      attr.setXYZ(v, c.r, c.g, c.b);
+    }
+    attr.needsUpdate = true;
+  }
+}
+function paintComps() {
+  for (const p of parts) { p.mesh.geometry.attributes.color.array.set(p.compColors); p.mesh.geometry.attributes.color.needsUpdate = true; }
+}
+ZONES.forEach(Z => Z.c = new THREE.Color(Z.debugColor));
+const hue = i => new THREE.Color().setHSL((i * 0.618034) % 1, 0.7, 0.55);
+
+new GLTFLoader().load('../vinfast_vf3_plus_2026.glb', gltf => {
+  const root = gltf.scene;
+  scene.add(root);
+  root.updateMatrixWorld(true);
+  let i = 0;
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    const c = segmentMesh(o);
+    const geo = o.geometry;
+    const tris = geo.attributes.position.count / 3;
+    const color = hue(i);
+    // vertex color cho chế độ "mảng rời"
+    const col = new Float32Array(geo.attributes.position.count * 3);
+    for (let v = 0; v < geo.attributes.position.count; v++) {
+      const cc = hue(i * 7 + c.compOf[v] + 1); col.set([cc.r, cc.g, cc.b], v * 3);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(col.slice(), 3));
+    const p = { mesh:o, idx:i, name:o.name, matName:o.material.name, tris, color, origMat:o.material, ...c, compColors:col,
+      meshMat: new THREE.MeshStandardMaterial({ color, roughness:0.55, metalness:0.1, side:THREE.DoubleSide }),
+      compMat: new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.55, metalness:0.1, side:THREE.DoubleSide }),
+      edges: new THREE.LineSegments(new THREE.EdgesGeometry(geo, 35), new THREE.LineBasicMaterial({ color:0x000000 })) };
+    p.edges.visible = false; o.add(p.edges);
+    parts.push(p); i++;
+  });
+  // căn camera
+  const box = new THREE.Box3().setFromObject(root), size = box.getSize(new THREE.Vector3());
+  window.center = box.getCenter(new THREE.Vector3()); window.radius = size.length() / 2;
+  controls.target.copy(center); setCam('iso');
+  window.__parts = parts; window.__box = { min: box.min.toArray(), max: box.max.toArray() };
+  buildList(); buildZoneList(); applyMode();
+  document.getElementById('status').textContent = `${parts.length} mesh · kích thước ${size.toArray().map(x=>x.toFixed(2)).join(' × ')}`;
+}, e => { document.getElementById('status').textContent = `Đang tải… ${(e.loaded/1e6).toFixed(1)} MB`; },
+   err => { document.getElementById('status').textContent = 'Lỗi tải model: ' + err.message; });
+
+function applyMode() {
+  if (mode === 'zone') paintZones(); else if (mode === 'comp') paintComps();
+  for (const p of parts) {
+    p.mesh.material = mode === 'mesh' ? p.meshMat : (mode === 'comp' || mode === 'zone') ? p.compMat : p.origMat;
+    p.edges.visible = edgesOn;
+  }
+  for (const [id, m] of [['mZone','zone'],['mMesh','mesh'],['mComp','comp'],['mOrig','orig']]) document.getElementById(id).classList.toggle('on', mode === m);
+  document.getElementById('tEdges').classList.toggle('on', edgesOn);
+  document.getElementById('zones').style.display = mode === 'zone' ? '' : 'none';
+  document.getElementById('list').style.display = mode === 'zone' ? 'none' : '';
+}
+function buildZoneList() {
+  const box = document.getElementById('zones');
+  box.innerHTML = '<div style="color:var(--muted);margin:4px 0 6px">Rê chuột vào tên vùng để làm nổi vùng đó</div>';
+  ZONES.forEach((Z, z) => {
+    const d = document.createElement('div'); d.className = 'mesh';
+    d.innerHTML = `<span class="sw" style="background:${Z.debugColor}"></span><span>${String(z+1).padStart(2,'0')}. ${Z.name}</span>`;
+    d.onmouseenter = () => { hoverZone = z; paintZones(); };
+    d.onmouseleave = () => { hoverZone = null; paintZones(); };
+    box.appendChild(d);
+  });
+}
+window.focusZone = z => { hoverZone = z; paintZones(); };
+function buildList() {
+  const list = document.getElementById('list'); list.innerHTML = '';
+  for (const p of parts) {
+    const d = document.createElement('div'); d.className = 'mesh'; p.row = d;
+    d.innerHTML = `<input type="checkbox" checked><span class="sw" style="background:#${p.color.getHexString()}"></span>
+      <span><b>${p.name}</b><br><small style="margin:0">${p.matName}</small></span>
+      <small>${p.tris.toLocaleString()} tri · ${p.compCount} mảng</small>`;
+    const cb = d.querySelector('input');
+    cb.onclick = e => { e.stopPropagation(); p.mesh.visible = cb.checked; };
+    d.onclick = () => { // click = chỉ hiện mesh này
+      for (const q of parts) { q.mesh.visible = q === p; q.row.querySelector('input').checked = q === p; }
+    };
+    list.appendChild(d);
+  }
+}
+document.getElementById('mZone').onclick = () => { mode = 'zone'; applyMode(); };
+document.getElementById('mMesh').onclick = () => { mode = 'mesh'; applyMode(); };
+document.getElementById('mComp').onclick = () => { mode = 'comp'; applyMode(); };
+document.getElementById('mOrig').onclick = () => { mode = 'orig'; applyMode(); };
+document.getElementById('tEdges').onclick = () => { edgesOn = !edgesOn; applyMode(); };
+document.getElementById('showAll').onclick = () => { for (const p of parts) { p.mesh.visible = true; p.row.querySelector('input').checked = true; } };
+
+// Camera presets — trục xe được xác định sau khi load (xem window.__box)
+function setCam(name) {
+  const r = radius * 2.4, c = center;
+  const dirs = { front:[0,0,1], back:[0,0,-1], left:[-1,0,0], right:[1,0,0], top:[0,1,0.001], iso:[0.8,0.45,0.9] };
+  const d = new THREE.Vector3(...dirs[name]).normalize().multiplyScalar(r);
+  camera.position.copy(c).add(d); controls.target.copy(c); controls.update();
+}
+window.setCam = setCam;
+window.lookAt = (target, from) => { controls.target.set(...target); camera.position.set(...from); controls.update(); };
+document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => setCam(b.dataset.cam));
+
+// Click để xem mesh + mảng
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+renderer.domElement.addEventListener('click', e => {
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(parts.map(p => p.mesh).filter(m => m.visible), false)[0];
+  const info = document.getElementById('info');
+  if (selected) selected.row.classList.remove('sel');
+  if (!hit) { info.textContent = 'Không trúng mảng nào'; selected = null; return; }
+  const p = parts.find(q => q.mesh === hit.object); selected = p; p.row.classList.add('sel');
+  const comp = p.compOf[hit.face.a];
+  const z = p.zoneOf[hit.face.a];
+  info.textContent = `Vùng: ${z < 0 ? '(chưa gán)' : ZONES[z].name}\nMesh: ${p.name}\nMaterial: ${p.matName}\nMảng #${comp} / ${p.compCount}  (${p.compTris[comp]} tri)`;
+});
+
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+</body>

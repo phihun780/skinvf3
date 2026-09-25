@@ -1,0 +1,10 @@
+# Cloudflare Pages — web tĩnh (dist/) + API CMS (functions/) + R2 lưu nội dung CMS.
+# Mật khẩu CMS KHÔNG ghi ở đây: đặt secret CMS_PASSWORD trong dashboard (Pages → Settings → Variables and Secrets)
+# hoặc: npx wrangler pages secret put CMS_PASSWORD
+name = "skinvf3"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-01"
+
+[[r2_buckets]]
+binding = "CONTENT"
+bucket_name = "skinvf3-content"

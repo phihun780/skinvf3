@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phối xe · VF3 Custom Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body { overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; }
+
+  /* ---- panel trái: danh sách vùng ---- */
+  .left { position: fixed; top: 80px; left: 20px; bottom: 20px; width: 272px; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
+  .left header { padding: 18px 18px 10px; }
+  .left h1 { font-size: 17px; font-weight: 600; margin: 4px 0 2px; }
+  .left .hint { color: var(--muted); font-size: 12px; margin: 0; }
+  .zones { flex: 1; overflow: auto; padding: 4px 10px 12px; scrollbar-width: thin; }
+  .group-title { margin: 14px 8px 6px; }
+  .zone { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border-radius: 10px; border: 1px solid transparent; background: none; text-align: left; transition: background .15s; }
+  .zone:hover { background: rgba(255,255,255,0.04); }
+  .zone.active { background: rgba(216,183,117,0.10); border-color: rgba(216,183,117,0.35); }
+  .zone .name { flex: 1; font-size: 13px; }
+  .zone .fin { color: var(--faint); font-size: 11px; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; flex: none; border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: inset -3px -4px 6px rgba(0,0,0,0.35), inset 3px 3px 5px rgba(255,255,255,0.22); }
+  .dot.matte, .dot.plastic { box-shadow: inset -2px -3px 5px rgba(0,0,0,0.25); }
+  .dot.chrome, .dot.metallic, .dot.pearl { box-shadow: inset -3px -4px 6px rgba(0,0,0,0.45), inset 4px 4px 6px rgba(255,255,255,0.55); }
+  .presets { border-top: 1px solid var(--line); padding: 12px 14px 14px; }
+  .preset-row { display: flex; gap: 8px; overflow-x: auto; padding-top: 8px; scrollbar-width: none; }
+  .chip { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; border: 1px solid var(--line-2); background: none; font-size: 12px; }
+  .chip:hover { border-color: var(--accent); }
+  .trio { display: flex; } .trio i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.4); margin-left: -4px; } .trio i:first-child { margin-left: 0; }
+
+  /* ---- panel phải: màu / decal ---- */
+  .right { position: fixed; top: 80px; right: 20px; bottom: 20px; width: 340px; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
+  .tabs { display: flex; gap: 4px; padding: 10px; border-bottom: 1px solid var(--line); }
+  .tab { flex: 1; height: 36px; border-radius: 9px; border: none; background: none; color: var(--muted); font-weight: 500; }
+  .tab.active { background: rgba(255,255,255,0.07); color: var(--text); }
+  .tab .badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: rgba(216,183,117,0.15); color: var(--accent); margin-left: 6px; }
+  .pane { flex: 1; overflow: auto; padding: 18px; scrollbar-width: thin; }
+  .pane[hidden] { display: none; }
+  .zone-title { font-size: 22px; font-weight: 600; margin: 4px 0 2px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 12px; margin: 0 0 18px; }
+  .section { margin-bottom: 22px; }
+  .section > .eyebrow { display: block; margin-bottom: 10px; }
+  .finishes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .finish { height: 36px; border-radius: 9px; border: 1px solid var(--line-2); background: none; font-size: 12.5px; transition: .15s; }
+  .finish:hover { border-color: rgba(255,255,255,0.3); }
+  .finish.active { border-color: var(--accent); color: var(--accent); background: rgba(216,183,117,0.08); }
+  .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .sw { aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(255,255,255,0.16); position: relative; transition: transform .15s;
+    box-shadow: inset -4px -5px 8px rgba(0,0,0,0.3), inset 4px 4px 6px rgba(255,255,255,0.2); }
+  .sw:hover { transform: scale(1.08); }
+  .sw.active::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--accent); }
+  .color-name { margin-top: 12px; font-size: 13px; } .color-name span { color: var(--faint); margin-left: 6px; letter-spacing: .04em; }
+  .custom { display: flex; gap: 8px; align-items: center; }
+  .custom input[type=color] { width: 44px; height: 38px; border: 1px solid var(--line-2); border-radius: 9px; background: none; padding: 3px; cursor: pointer; }
+  .custom input[type=text] { flex: 1; height: 38px; border-radius: 9px; border: 1px solid var(--line-2); background: rgba(255,255,255,0.03); color: var(--text); padding: 0 12px; font: 13px var(--font); letter-spacing: .06em; text-transform: uppercase; }
+  .quick { display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick .btn { height: 32px; font-size: 12px; padding: 0 12px; }
+
+  .decal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .decal { aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--line-2); background: rgba(255,255,255,0.03); display: grid; place-items: center; padding: 10px; }
+  .decal svg { width: 100%; height: 100%; }
+  .drop { border: 1px dashed var(--line-2); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); font-size: 12.5px; }
+  .note { margin-top: 18px; padding: 12px 14px; border-radius: 10px; background: rgba(216,183,117,0.08); color: #cdb483; font-size: 12.5px; }
+
+  /* ---- toolbar dưới ---- */
+  .toolbar { position: fixed; bottom: 24px; left: 312px; right: 380px; display: flex; justify-content: center; z-index: 10; pointer-events: none; }
+  .toolbar .panel { display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 999px; pointer-events: auto; }
+  .tb { height: 34px; padding: 0 13px; border-radius: 999px; border: none; background: none; color: var(--muted); font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; }
+  .tb:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .tb.active { color: var(--text); background: rgba(255,255,255,0.09); }
+  .tb svg { width: 16px; height: 16px; }
+  .tb:disabled { opacity: .35; pointer-events: none; }
+  .sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 4px; }
+
+  .tip { position: fixed; z-index: 30; pointer-events: none; padding: 5px 10px; border-radius: 8px; font-size: 12px; background: rgba(10,11,13,0.85); border: 1px solid var(--line-2); opacity: 0; transition: opacity .12s; transform: translate(14px, 14px); }
+  .tip.show { opacity: 1; }
+
+  /* ---- poster (xem trước bố cục) ---- */
+  .modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); }
+  .modal[hidden] { display: none; }
+  .modal-box { max-height: calc(100vh - 40px); overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .modal-actions { display: flex; gap: 8px; }
+  .poster { width: 1000px; background: #0d0e10; color: var(--text); border-radius: 6px; padding: 34px 38px; font-family: var(--font); box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+  .poster-head { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--line-2); padding-bottom: 16px; }
+  .poster-head .logo { font-size: 18px; }
+  .poster-head .meta { text-align: right; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .poster-head .meta b { color: var(--text); font-weight: 500; }
+  .poster-hero { margin: 18px 0 10px; border-radius: 6px; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #2a2d33, #0d0e10 75%); }
+  .poster-hero img { display: block; width: 100%; }
+  .poster-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .poster-grid figure { margin: 0; border-radius: 4px; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #25282d, #0d0e10 80%); }
+  .poster-grid img { display: block; width: 100%; }
+  .poster-grid figcaption { font-size: 10.5px; color: var(--muted); padding: 5px 8px; letter-spacing: .06em; text-transform: uppercase; }
+  .poster-table { margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 36px; }
+  .poster-table .row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .poster-table .row .dot { width: 16px; height: 16px; }
+  .poster-table .row .n { flex: 1; } .poster-table .row .v { color: var(--muted); font-size: 11.5px; }
+  .poster-foot { margin-top: 18px; display: flex; justify-content: space-between; color: var(--faint); font-size: 11px; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body class="studio-bg">
+<div class="loader" id="loader"><div class="loader-box">
+  <div class="logo" style="justify-content:center"><span class="logo-mark">V3</span><span>VF3 Custom Studio</span></div>
+  <div class="loader-bar"><i id="loaderBar"></i></div><p id="loaderText">Đang tải model…</p>
+</div></div>
+
+<div id="stage"></div>
+
+<header class="topbar">
+  <a class="logo" href="index.html"><span class="logo-mark">V3</span><span>VF3 Custom Studio<small>Exterior configurator</small></span></a>
+  <nav class="nav">
+    <a href="index.html">Trang chủ</a>
+    <a href="configurator.html" class="active">Phối xe</a>
+    <a href="index.html#mau">Thư viện mẫu</a>
+    <a href="index.html#huong-dan">Hướng dẫn</a>
+  </nav>
+  <div class="spacer"></div>
+  <span class="code" id="designCode"></span>
+  <button class="btn" id="saveBtn">Lưu</button>
+  <button class="btn primary" id="posterBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg>
+    Xuất poster</button>
+</header>
+
+<aside class="left panel">
+  <header>
+    <span class="eyebrow">Tuỳ chỉnh</span>
+    <h1>Chọn vùng</h1>
+    <p class="hint">Hoặc bấm trực tiếp lên xe</p>
+  </header>
+  <div class="zones" id="zones"></div>
+  <div class="presets">
+    <span class="eyebrow">Mẫu có sẵn</span>
+    <div class="preset-row" id="presetRow"></div>
+  </div>
+</aside>
+
+<aside class="right panel">
+  <div class="tabs">
+    <button class="tab active" data-tab="color">Màu & chất</button>
+    <button class="tab" data-tab="decal">Decal<span class="badge">GĐ 2</span></button>
+  </div>
+  <div class="pane" id="pane-color">
+    <span class="eyebrow" id="zoneGroup"></span>
+    <div class="zone-title" id="zoneTitle"></div>
+    <p class="sub" id="zoneSub"></p>
+    <div class="section"><span class="eyebrow">Chất bề mặt</span><div class="finishes" id="finishes"></div></div>
+    <div class="section"><span class="eyebrow">Bảng màu</span><div class="swatches" id="swatches"></div>
+      <div class="color-name" id="colorName"></div></div>
+    <div class="section"><span class="eyebrow">Màu tuỳ chọn</span>
+      <div class="custom"><input type="color" id="picker"><input type="text" id="hex" maxlength="7" spellcheck="false"></div></div>
+    <div class="section"><span class="eyebrow">Áp dụng nhanh</span>
+      <div class="quick"><button class="btn" id="copyBody">Giống thân xe</button><button class="btn" id="applyGroup"></button></div></div>
+  </div>
+  <div class="pane" id="pane-decal" hidden>
+    <span class="eyebrow">Thư viện decal</span>
+    <div class="decal-grid" style="margin-top:10px">
+      <div class="decal"><svg viewBox="0 0 60 60"><rect x="4" y="22" width="52" height="6" fill="#d8b775"/><rect x="4" y="32" width="52" height="6" fill="#d8b775"/></svg></div>
+      <div class="decal"><svg viewBox="0 0 60 60"><text x="30" y="42" text-anchor="middle" font-size="34" font-weight="700" fill="#ecebe7" font-family="Be Vietnam Pro">03</text></svg></div>
+      <div class="decal"><svg viewBox="0 0 60 60"><path d="M34 4L14 34h14l-4 22 22-32H32z" fill="#e7d21a"/></svg></div>
+      <div class="decal"><svg viewBox="0 0 60 60"><g fill="#ecebe7"><rect x="6" y="18" width="8" height="8"/><rect x="22" y="18" width="8" height="8"/><rect x="38" y="18" width="8" height="8"/><rect x="14" y="26" width="8" height="8"/><rect x="30" y="26" width="8" height="8"/><rect x="46" y="26" width="8" height="8"/><rect x="6" y="34" width="8" height="8"/><rect x="22" y="34" width="8" height="8"/><rect x="38" y="34" width="8" height="8"/></g></svg></div>
+      <div class="decal"><svg viewBox="0 0 60 60"><path d="M4 44 C18 44 22 16 56 16" stroke="#e8641c" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M4 52 C22 52 28 26 56 26" stroke="#e8641c" stroke-width="3" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="decal"><svg viewBox="0 0 60 60"><text x="30" y="38" text-anchor="middle" font-size="16" font-weight="700" fill="#9fd8c8" font-family="Be Vietnam Pro" letter-spacing="2">VF3</text></svg></div>
+    </div>
+    <div class="section" style="margin-top:18px"><span class="eyebrow">Ảnh của bạn</span>
+      <div class="drop" style="margin-top:10px">Kéo thả PNG / SVG vào đây<br>hoặc <u>chọn tệp</u></div></div>
+    <div class="section"><span class="eyebrow">Chữ</span>
+      <div class="custom" style="margin-top:10px"><input type="text" placeholder="Nhập chữ…" style="text-transform:none"></div></div>
+    <div class="note">Giai đoạn 2: chọn decal rồi kéo thả trực tiếp lên thân xe, xoay, co giãn, đổi màu, sắp lớp.</div>
+  </div>
+</aside>
+
+<div class="toolbar"><div class="panel" id="toolbar"></div></div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="posterModal" hidden><div class="modal-box">
+  <div class="poster" id="poster"></div>
+  <div class="modal-actions">
+    <button class="btn" id="posterClose">Đóng</button>
+    <button class="btn primary" id="posterDownload">Tải PNG / PDF</button>
+  </div>
+</div></div>
+
+<script type="module">
+import { createStudio, VIEWS } from './studio.js';
+import { BRAND, FINISHES, PALETTE, GROUPS, EDITABLE, DEFAULT_CONFIG, PRESETS } from './data.js';
+import { ZONES } from '../shared/vf3-zones.js';
+
+const $ = id => document.getElementById(id);
+const zoneInfo = id => ZONES.find(z => z.id === id);
+const colorName = hex => (PALETTE.find(p => p.hex.toLowerCase() === hex.toLowerCase()) || {}).name || 'Màu tuỳ chọn';
+const clone = o => JSON.parse(JSON.stringify(o));
+const toast = msg => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200); };
+
+// ---- trạng thái
+const store = { get() { try { return JSON.parse(localStorage.getItem('vf3-mockup')); } catch { return null; } },
+                set(v) { try { localStorage.setItem('vf3-mockup', JSON.stringify(v)); } catch {} } };
+const presetId = new URLSearchParams(location.search).get('preset');
+const saved = store.get();
+// trộn với mặc định để thiết kế lưu từ bản cũ (thiếu vùng mới) vẫn mở được
+let config = clone({ ...DEFAULT_CONFIG, ...(PRESETS.find(p => p.id === presetId)?.config || saved?.config) });
+let code = saved?.code || 'VF3-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+let selected = 'body';
+const undoStack = [], redoStack = [];
+$('designCode').textContent = 'MÃ ' + code;
+
+// ---- studio
+const studio = await createStudio($('stage'), {
+  onProgress: (p, msg) => { $('loaderBar').style.width = (p * 100).toFixed(0) + '%'; $('loaderText').textContent = msg; },
+});
+studio.applyConfig(config);
+$('loader').classList.add('done');
+window.__studio = studio;  // debug
+
+function commit(mutator) {
+  undoStack.push(clone(config)); redoStack.length = 0;
+  mutator(config); studio.applyConfig(config); store.set({ config, code }); render();
+}
+function undo() { if (!undoStack.length) return; redoStack.push(clone(config)); config = undoStack.pop(); studio.applyConfig(config); render(); }
+function redo() { if (!redoStack.length) return; undoStack.push(clone(config)); config = redoStack.pop(); studio.applyConfig(config); render(); }
+function select(id) { selected = id; studio.pulse(id); render(); }
+
+// ---- panel trái
+function renderZones() {
+  const box = $('zones'); box.innerHTML = '';
+  for (const [g, label] of Object.entries(GROUPS)) {
+    const ids = EDITABLE.filter(id => zoneInfo(id).group === g);
+    if (!ids.length) continue;
+    box.insertAdjacentHTML('beforeend', `<div class="eyebrow group-title">${label}</div>`);
+    for (const id of ids) {
+      const v = config[id], b = document.createElement('button');
+      b.className = 'zone' + (id === selected ? ' active' : '');
+      b.innerHTML = `<span class="dot ${v.finish}" style="background:${v.color}"></span><span class="name">${zoneInfo(id).name}</span><span class="fin">${FINISHES[v.finish].name}</span>`;
+      b.onclick = () => select(id);
+      b.onmouseenter = () => studio.setHover(id); b.onmouseleave = () => studio.setHover(null);
+      box.appendChild(b);
+    }
+  }
+}
+function renderPresets() {
+  $('presetRow').innerHTML = '';
+  for (const p of PRESETS) {
+    const b = document.createElement('button'); b.className = 'chip';
+    b.innerHTML = `<span class="trio"><i style="background:${p.config.body.color}"></i><i style="background:${p.config.roof.color}"></i><i style="background:${p.config.rim.color}"></i></span>${p.name}`;
+    b.onclick = () => { commit(c => Object.assign(c, clone(p.config))); toast('Đã áp dụng mẫu ' + p.name); };
+    $('presetRow').appendChild(b);
+  }
+}
+
+// ---- panel phải
+function renderEditor() {
+  const z = zoneInfo(selected), v = config[selected];
+  $('zoneGroup').textContent = GROUPS[z.group];
+  $('zoneTitle').textContent = z.name;
+  $('zoneSub').textContent = `${FINISHES[v.finish].name} · ${colorName(v.color)}`;
+  const fin = $('finishes'); fin.innerHTML = '';
+  for (const [k, f] of Object.entries(FINISHES)) {
+    if (k === 'plastic' && z.group === 'paint') continue;
+    const b = document.createElement('button'); b.className = 'finish' + (k === v.finish ? ' active' : ''); b.textContent = f.name;
+    b.onclick = () => commit(c => { c[selected].finish = k; });
+    fin.appendChild(b);
+  }
+  const sw = $('swatches'); sw.innerHTML = '';
+  for (const p of PALETTE) {
+    const b = document.createElement('button'); b.className = 'sw' + (p.hex.toLowerCase() === v.color.toLowerCase() ? ' active' : '');
+    b.style.background = p.hex; b.title = p.name;
+    b.onclick = () => commit(c => { c[selected].color = p.hex; });
+    b.onmouseenter = () => { $('colorName').innerHTML = `${p.name}<span>${p.hex.toUpperCase()}</span>`; };
+    b.onmouseleave = renderColorName;
+    sw.appendChild(b);
+  }
+  renderColorName();
+  $('picker').value = v.color; $('hex').value = v.color.toUpperCase();
+  $('applyGroup').textContent = 'Cho cả nhóm ' + GROUPS[z.group].toLowerCase();
+  $('copyBody').hidden = selected === 'body';
+}
+function renderColorName() { const v = config[selected]; $('colorName').innerHTML = `${colorName(v.color)}<span>${v.color.toUpperCase()}</span>`; }
+// kéo trong bảng chọn màu: cập nhật xe trực tiếp, chỉ ghi 1 bước hoàn tác khi thả
+let pickerBase = null;
+$('picker').oninput = e => {
+  pickerBase ||= clone(config);
+  config[selected].color = e.target.value; studio.applyZone(selected, config[selected]); $('hex').value = e.target.value.toUpperCase();
+};
+$('picker').onchange = () => {
+  if (!pickerBase) return;
+  undoStack.push(pickerBase); redoStack.length = 0; pickerBase = null;
+  store.set({ config, code }); render();
+};
+$('hex').onchange = e => { const h = e.target.value.trim(); if (/^#?[0-9a-f]{6}$/i.test(h)) commit(c => { c[selected].color = (h[0] === '#' ? h : '#' + h).toLowerCase(); }); else renderEditor(); };
+$('copyBody').onclick = () => commit(c => { c[selected] = clone(c.body); });
+$('applyGroup').onclick = () => { const g = zoneInfo(selected).group; commit(c => { for (const id of EDITABLE) if (zoneInfo(id).group === g) c[id] = clone(c[selected]); }); };
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+  $('pane-color').hidden = t.dataset.tab !== 'color'; $('pane-decal').hidden = t.dataset.tab !== 'decal';
+});
+
+// ---- toolbar
+const icon = {
+  rotate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg>',
+  reset: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>',
+};
+let activeView = 'front34', autoRotate = false;
+function renderToolbar() {
+  const tb = $('toolbar'); tb.innerHTML = '';
+  for (const [k, v] of Object.entries(VIEWS)) {
+    const b = document.createElement('button'); b.className = 'tb' + (k === activeView ? ' active' : ''); b.textContent = v.label;
+    b.onclick = () => { activeView = k; studio.setView(k); renderToolbar(); };
+    tb.appendChild(b);
+  }
+  tb.insertAdjacentHTML('beforeend', '<span class="sep"></span>');
+  const add = (html, title, fn, opts = {}) => { const b = document.createElement('button'); b.className = 'tb' + (opts.active ? ' active' : ''); b.innerHTML = html; b.title = title; b.disabled = !!opts.disabled; b.onclick = fn; tb.appendChild(b); };
+  add(icon.rotate + 'Tự xoay', 'Tự xoay', () => { autoRotate = !autoRotate; studio.setAutoRotate(autoRotate); renderToolbar(); }, { active: autoRotate });
+  add(icon.undo, 'Hoàn tác (Ctrl+Z)', undo, { disabled: !undoStack.length });
+  add(icon.redo, 'Làm lại (Ctrl+Y)', redo, { disabled: !redoStack.length });
+  add(icon.reset, 'Về mặc định', () => { commit(c => Object.assign(c, clone(DEFAULT_CONFIG))); toast('Đã về cấu hình mặc định'); });
+}
+studio.controls.addEventListener('start', () => { if (activeView) { activeView = null; renderToolbar(); } });
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
+});
+
+// ---- chọn vùng trên xe
+const canvas = studio.renderer.domElement, tip = $('tip');
+let down = null;
+canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;  // kéo xoay thì không tính là chọn
+  const id = studio.pick(e.clientX, e.clientY); if (id) select(id);
+});
+canvas.addEventListener('pointermove', e => {
+  if (e.buttons) { tip.classList.remove('show'); return; }
+  const id = studio.pick(e.clientX, e.clientY);
+  studio.setHover(id); canvas.style.cursor = id ? 'pointer' : 'grab';
+  if (id) { tip.textContent = zoneInfo(id).name; tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; tip.classList.add('show'); }
+  else tip.classList.remove('show');
+});
+canvas.addEventListener('pointerleave', () => { studio.setHover(null); tip.classList.remove('show'); });
+
+// ---- lưu / poster
+$('saveBtn').onclick = () => { store.set({ config, code }); toast('Đã lưu thiết kế ' + code + ' trong trình duyệt'); };
+$('posterBtn').onclick = () => {
+  const now = new Date(), pad = n => String(n).padStart(2, '0');
+  const when = `${pad(now.getHours())}:${pad(now.getMinutes())} · ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+  const hero = studio.snapshot('front34', 1840, 820, 'image/png');
+  const views = ['front', 'side', 'rear', 'rear34', 'top'].map(v => [VIEWS[v].label, studio.snapshot(v, 560, 380, 'image/png')]);
+  const rows = EDITABLE.map(id => { const v = config[id];
+    return `<div class="row"><span class="dot ${v.finish}" style="background:${v.color}"></span><span class="n">${zoneInfo(id).name}</span><span class="v">${colorName(v.color)} · ${v.color.toUpperCase()} · ${FINISHES[v.finish].name}</span></div>`; }).join('');
+  $('poster').innerHTML = `
+    <div class="poster-head">
+      <div class="logo"><span class="logo-mark">V3</span><span>${BRAND.name}<small>Bản phối ngoại thất VinFast VF3</small></span></div>
+      <div class="meta">Mã thiết kế <b>${code}</b><br>${when}</div>
+    </div>
+    <div class="poster-hero"><img src="${hero}"></div>
+    <div class="poster-grid">${views.map(([l, u]) => `<figure><img src="${u}"><figcaption>${l}</figcaption></figure>`).join('')}</div>
+    <div class="poster-table">${rows}</div>
+    <div class="poster-foot"><span>Màu hiển thị trên màn hình có thể khác màu decal thực tế — hãy đối chiếu bảng màu tại tiệm.</span><span>3D model: Hoàng Huy · CC BY 4.0</span></div>`;
+  $('posterModal').hidden = false;
+};
+$('posterClose').onclick = () => { $('posterModal').hidden = true; };
+$('posterDownload').onclick = () => toast('Tải PNG / PDF sẽ làm ở giai đoạn 3');
+
+function render() { renderZones(); renderEditor(); renderToolbar(); }
+renderPresets(); render();
+</script>
+</body>
+</html>

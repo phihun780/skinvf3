@@ -1,0 +1,10 @@
+node_modules/
+dist/
+# mật khẩu CMS khi chạy localhost + nội dung CMS lưu thử trên máy
+.dev.vars
+.cms-data/
+.wrangler/
+tsconfig.tsbuildinfo
+# ảnh chụp kiểm tra giao diện (nặng, không cần cho web)
+mockup/screenshots/
+.claude/settings.local.json

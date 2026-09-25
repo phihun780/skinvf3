@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VF3 Custom Studio · Phối màu VinFast VF3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+
+  /* ---- hero ---- */
+  .hero { position: relative; min-height: 100vh; display: grid; grid-template-columns: minmax(560px, 5fr) 7fr; align-items: center; padding-top: 64px; overflow: hidden; }
+  .hero-copy { padding: 0 0 60px max(32px, calc((100vw - 1240px) / 2 + 32px)); position: relative; z-index: 2; }
+  .hero h1 { font-size: clamp(40px, 4.2vw, 62px); line-height: 1.06; font-weight: 600; letter-spacing: -0.025em; margin: 18px 0 20px; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p.lead { color: #b5b7bc; font-size: 17px; line-height: 1.65; max-width: 470px; margin: 0 0 34px; font-weight: 300; }
+  .cta { display: flex; gap: 12px; }
+  .stats { display: flex; gap: 34px; margin-top: 52px; }
+  .stats b { display: block; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+  .stats span { color: var(--muted); font-size: 12.5px; }
+  .hero-stage { position: relative; height: 100vh; margin-top: -64px; }
+  #stage { position: absolute; inset: 0; }
+  #stage canvas { display: block; }
+  .stage-status { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--muted); font-size: 13px; text-align: center; transition: opacity .5s; }
+  .stage-status i { display: block; width: 180px; height: 2px; background: var(--line); margin: 12px auto 0; overflow: hidden; border-radius: 2px; }
+  .stage-status i b { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .quick-presets { position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; }
+  .quick-presets .eyebrow { margin-right: 6px; }
+  .qp { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; padding: 0; background-clip: padding-box; transition: transform .15s; }
+  .qp:hover { transform: scale(1.12); }
+  .qp.active { border-color: var(--accent); }
+  .scroll-hint { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); color: var(--faint); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+
+  /* ---- sections ---- */
+  section.block { padding: 110px 0; border-top: 1px solid var(--line); }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; margin-bottom: 44px; }
+  .head h2 { font-size: 38px; font-weight: 600; letter-spacing: -0.02em; margin: 10px 0 0; line-height: 1.15; }
+  .head p { color: var(--muted); max-width: 420px; margin: 0; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .step { padding: 28px; border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line); }
+  .step .num { font-size: 13px; color: var(--accent); letter-spacing: .1em; }
+  .step h3 { font-size: 19px; font-weight: 600; margin: 34px 0 8px; }
+  .step p { color: var(--muted); margin: 0; font-size: 14px; }
+
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card { border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line); overflow: hidden; transition: border-color .2s, transform .2s; display: block; }
+  .card:hover { border-color: rgba(216,183,117,0.45); transform: translateY(-3px); }
+  .card .img { aspect-ratio: 3 / 2; background: radial-gradient(ellipse 70% 65% at 50% 45%, #2a2d33, #121417 80%); display: grid; place-items: center; }
+  .card .img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .img .ph { color: var(--faint); font-size: 12px; }
+  .card .body { padding: 16px 18px 18px; display: flex; align-items: center; gap: 12px; }
+  .card .body .t { flex: 1; } .card h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .card .tag { color: var(--muted); font-size: 12px; }
+  .card .go { color: var(--accent); font-size: 13px; opacity: 0; transition: opacity .2s; }
+  .card:hover .go { opacity: 1; }
+  .trio { display: flex; } .trio i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,.45); margin-left: -5px; } .trio i:first-child { margin-left: 0; }
+
+  .faq { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+  details { border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); padding: 18px 22px; }
+  summary { cursor: pointer; font-weight: 500; list-style: none; display: flex; justify-content: space-between; gap: 20px; }
+  summary::after { content: '+'; color: var(--accent); font-size: 18px; line-height: 1; }
+  details[open] summary::after { content: '–'; }
+  details p { color: var(--muted); margin: 12px 0 0; font-size: 14px; }
+
+  .final { text-align: center; padding: 120px 0; border-top: 1px solid var(--line); background: radial-gradient(ellipse 50% 70% at 50% 100%, rgba(216,183,117,0.10), transparent 70%); }
+  .final h2 { font-size: 44px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+  .final p { color: var(--muted); margin: 0 0 30px; }
+
+  footer { border-top: 1px solid var(--line); padding: 30px 0 40px; color: var(--faint); font-size: 12.5px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><span class="logo-mark">V3</span><span>VF3 Custom Studio<small>Exterior configurator</small></span></a>
+  <nav class="nav">
+    <a href="index.html" class="active">Trang chủ</a>
+    <a href="configurator.html">Phối xe</a>
+    <a href="#mau">Thư viện mẫu</a>
+    <a href="#huong-dan">Hướng dẫn</a>
+  </nav>
+  <div class="spacer"></div>
+  <a class="btn primary" href="configurator.html">Bắt đầu phối</a>
+</header>
+
+<section class="hero studio-bg">
+  <div class="hero-copy">
+    <span class="eyebrow">Studio phối màu VinFast VF3</span>
+    <h1>Xem trước<br>chiếc VF3<br><em>của riêng bạn.</em></h1>
+    <p class="lead">Phối trước, ra tiệm sau. Đổi màu từng chi tiết: thân, nóc, ốp, mâm, cùm phanh. Dán decal, xem trước dưới ánh sáng studio, rồi xuất poster mang thẳng đến tiệm wrap.</p>
+    <div class="cta">
+      <a class="btn primary lg" href="configurator.html">Bắt đầu phối
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14m-6-6l6 6-6 6"/></svg></a>
+      <a class="btn lg" href="#mau">Xem mẫu có sẵn</a>
+    </div>
+    <div class="stats">
+      <div><b>16</b><span>vùng tuỳ chỉnh</span></div>
+      <div><b>7</b><span>chất bề mặt</span></div>
+      <div><b>6 góc</b><span>trên poster xuất ra</span></div>
+    </div>
+  </div>
+  <div class="hero-stage">
+    <div id="stage"></div>
+    <div class="stage-status" id="status">Đang chuẩn bị xe…<i><b id="bar"></b></i></div>
+    <div class="quick-presets panel" id="quick" hidden><span class="eyebrow">Thử nhanh</span></div>
+  </div>
+  <div class="scroll-hint">Cuộn xuống</div>
+</section>
+
+<section class="block" id="cach-dung">
+  <div class="wrap">
+    <div class="head"><div><span class="eyebrow">Cách hoạt động</span><h2>Ba bước, không cần tài khoản</h2></div>
+      <p>Mọi thứ chạy ngay trên trình duyệt. Thiết kế tự lưu trên máy của bạn.</p></div>
+    <div class="steps">
+      <div class="step"><span class="num">01</span><h3>Chọn vùng</h3><p>Bấm thẳng lên xe hoặc chọn trong danh sách: thân, nóc, capo, ốp vòm, cản, gương, mâm, cùm phanh…</p></div>
+      <div class="step"><span class="num">02</span><h3>Phối màu & decal</h3><p>Chọn màu và chất bề mặt (bóng, nhám, satin, metallic, ngọc trai, chrome), dán decal có sẵn hoặc ảnh của bạn.</p></div>
+      <div class="step"><span class="num">03</span><h3>Xuất poster</h3><p>Ảnh 6 góc, bảng màu theo từng vùng kèm mã HEX. Mang đến tiệm để đối chiếu và báo giá.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="mau">
+  <div class="wrap">
+    <div class="head"><div><span class="eyebrow">Thư viện mẫu</span><h2>Lấy cảm hứng, rồi chỉnh theo ý bạn</h2></div>
+      <p>Bấm một mẫu để mở trong trình phối, sau đó chỉnh tiếp từng vùng.</p></div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</section>
+
+<section class="block" id="huong-dan">
+  <div class="wrap">
+    <div class="head"><div><span class="eyebrow">Hướng dẫn</span><h2>Câu hỏi thường gặp</h2></div></div>
+    <div class="faq">
+      <details open><summary>Màu trên màn hình có giống màu thật không?</summary><p>Gần đúng, nhưng màn hình và ánh sáng khác nhau sẽ làm màu lệch. Hãy dùng mã màu trên poster để đối chiếu với bảng màu decal thật tại tiệm.</p></details>
+      <details><summary>Poster dùng để làm gì?</summary><p>Poster gom ảnh 6 góc và bảng màu từng vùng. Thợ nhìn là biết cần dán gì, ở đâu, màu nào, và báo giá nhanh hơn.</p></details>
+      <details><summary>Có cần tạo tài khoản không?</summary><p>Không. Thiết kế tự lưu trong trình duyệt của bạn. Bạn có thể tải file thiết kế về để mở lại trên máy khác.</p></details>
+      <details><summary>Chất “Satin” và “Nhám” khác nhau thế nào?</summary><p>Satin có độ bóng nhẹ, mịn như lụa. Nhám gần như không phản chiếu ánh sáng. Xoay xe dưới đèn studio để thấy khác biệt.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <h2>Sẵn sàng phối chiếc VF3 của bạn?</h2>
+  <p>Mất khoảng 5 phút. Không cần tài khoản.</p>
+  <a class="btn primary lg" href="configurator.html">Bắt đầu phối</a>
+</section>
+
+<footer><div class="wrap">
+  <span>© 2026 VF3 Custom Studio · Không liên kết chính thức với VinFast.</span>
+  <span>Mô hình 3D: “Vinfast VF3 Plus 2026” của Hoàng Huy (Sketchfab) · CC BY 4.0</span>
+</div></footer>
+
+<script type="module">
+import { createStudio } from './studio.js';
+import { PRESETS } from './data.js';
+const $ = id => document.getElementById(id);
+
+// Thẻ mẫu hiện khung trước, ảnh chụp điền vào sau khi studio sẵn sàng
+const cards = PRESETS.map(p => {
+  const a = document.createElement('a'); a.className = 'card'; a.href = 'configurator.html?preset=' + p.id;
+  a.innerHTML = `<div class="img"><span class="ph">Đang render…</span></div>
+    <div class="body"><span class="trio"><i style="background:${p.config.body.color}"></i><i style="background:${p.config.roof.color}"></i><i style="background:${p.config.rim.color}"></i></span>
+    <div class="t"><h3>${p.name}</h3><span class="tag">${p.tag}</span></div><span class="go">Dùng mẫu →</span></div>`;
+  $('gallery').appendChild(a); return a;
+});
+
+const studio = await createStudio($('stage'), { onProgress: p => { $('bar').style.width = (p * 100).toFixed(0) + '%'; } });
+studio.controls.enableZoom = false;
+studio.setFrame({ fillX: 0.72, fillY: 0.55 });
+studio.setView('front34', false);
+let current = PRESETS[1];
+studio.applyConfig(current.config);
+
+// ảnh cho thư viện mẫu, render từ chính model
+PRESETS.forEach((p, i) => { studio.applyConfig(p.config); cards[i].querySelector('.img').innerHTML = `<img alt="${p.name}" src="${studio.snapshot('front34', 900, 600, 'image/png')}">`; });
+studio.applyConfig(current.config);
+$('status').style.opacity = 0;
+studio.setAutoRotate(true);
+
+// đổi mẫu nhanh trên hero
+const quick = $('quick'); quick.hidden = false;
+for (const p of PRESETS) {
+  const b = document.createElement('button'); b.className = 'qp' + (p === current ? ' active' : ''); b.title = p.name;
+  b.style.background = `linear-gradient(135deg, ${p.config.body.color} 55%, ${p.config.roof.color} 55%)`;
+  b.onclick = () => { current = p; studio.applyConfig(p.config); quick.querySelectorAll('.qp').forEach(x => x.classList.toggle('active', x === b)); };
+  quick.appendChild(b);
+}
+</script>
+</body>
+</html>
