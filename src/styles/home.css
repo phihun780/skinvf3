@@ -142,18 +142,18 @@ details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
 }
 @media (max-width: 760px) {
   /* hero: tiêu đề trên · xe giữa · chữ nhỏ + chấm màu + nút dưới (đo theo chiều cao màn hình di động thật, 100svh) */
-  .hero { min-height: 600px; max-height: 960px; }
+  .hero { min-height: 560px; max-height: 960px; }
   .hero-title { top: 11.5%; }
   .hero h1 .l1 { font-size: 12.6vw; }
   .hero h1 .l2 { font-size: 6.4vw; }
-  .hero-car { top: 25%; bottom: 31%; }
+  .hero-car { top: 24%; bottom: calc(210px + 4svh); }   /* xe nằm gọn giữa tiêu đề và cụm dưới */
   .hero-loading { top: 50%; }
-  .hero-points { left: 16px; right: 16px; bottom: 164px; flex-direction: row; justify-content: center; flex-wrap: wrap; gap: 6px 18px; }
+  .hero-points { left: 16px; right: 16px; bottom: calc(176px + 4svh); flex-direction: row; justify-content: center; flex-wrap: wrap; gap: 6px 18px; }
   .hero-points li { font-size: 11px; letter-spacing: 0.14em; color: var(--muted); }
   .hero-points li + li::before { content: '·'; margin-right: 18px; margin-left: -9px; opacity: .6; }
-  .hero-side { left: 0; right: 0; bottom: 28px; align-items: center; }
+  .hero-side { left: 0; right: 0; bottom: calc(52px + 4svh); align-items: center; }  /* cả cụm dưới dời lên, nằm trọn trong màn hình đầu */
   .hero-side .btn { height: 46px; padding: 0 26px; }
-  .hero-presets { bottom: 92px; padding: 6px; gap: 8px; }
+  .hero-presets { bottom: calc(112px + 4svh); padding: 6px; gap: 8px; }
   .hero-presets button { width: 32px; height: 32px; }
   .home { --header-h: 64px; --gap: 16px; }
   /* mục: gọn hơn cho màn nhỏ */
