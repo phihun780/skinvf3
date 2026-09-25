@@ -1,7 +1,7 @@
-// Ghép Hình ảnh SkinVF3 dọc A4 (300dpi) bằng canvas 2D: header thương hiệu, ảnh lớn + 4 góc, các ô màu có trong thiết kế (kèm mã HEX).
+// Ghép Hình ảnh SkinVF3 dọc A4 (300dpi) bằng canvas 2D: header thương hiệu + ngày tạo, ảnh 3/4 lớn + lưới 2×2 bốn góc nhìn,
+// chân trang ghi địa chỉ web (mờ).
 // Style giống web: nền mesh gradient xanh, ảnh xe (nền trong suốt từ snapshotter) đặt trong khung glass.
 import { BRAND } from '../config/brand';
-import { EDITABLE, type DesignConfig } from '../config/zones';
 import { POSTER } from '../config/poster';
 import type { ViewId } from '../store/viewer';
 import { snapshotter } from '../three/snapshot';
@@ -69,47 +69,19 @@ function drawShot(g: CanvasRenderingContext2D, img: HTMLImageElement, x: number,
   g.letterSpacing = big ? '6px' : '4px'; g.fillText(label.toUpperCase(), x + (big ? 40 : 26), y + h - (big ? 36 : 22)); g.letterSpacing = '0px';
 }
 
-function eyebrow(g: CanvasRenderingContext2D, text: string, x: number, y: number) {
-  g.font = display(600, 26); g.fillStyle = C.muted;
-  g.letterSpacing = '6px'; g.fillText(text.toUpperCase(), x, y); g.letterSpacing = '0px';
-}
+export const SITE_URL = 'skinvf3.pages.dev';
 
-/** Các màu có trong thiết kế (không trùng), theo thứ tự vùng: thân xe trước. */
-function usedColors(config: DesignConfig) {
-  const seen = new Set<string>();
-  for (const id of EDITABLE) { const c = config[id]?.color?.toLowerCase(); if (c) seen.add(c); }
-  return [...seen];
-}
-
-/** Ô màu: khối màu bo góc (có ánh sáng nhẹ như mẫu màu thật) + mã HEX bên dưới. */
-function drawSwatch(g: CanvasRenderingContext2D, hex: string, x: number, y: number, w: number, h: number, r: number, labelPx: number) {
-  g.save();
-  roundRect(g, x, y, w, h, r);
-  g.shadowColor = 'rgba(1,4,24,0.5)'; g.shadowBlur = 40; g.shadowOffsetY = 16;
-  g.fillStyle = hex; g.fill();
-  g.shadowColor = 'transparent';
-  const shine = g.createLinearGradient(x, y, x, y + h);
-  shine.addColorStop(0, 'rgba(255,255,255,0.22)'); shine.addColorStop(0.45, 'rgba(255,255,255,0)'); shine.addColorStop(1, 'rgba(0,0,0,0.12)');
-  g.fillStyle = shine; g.fill();
-  g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = 2.5; g.stroke();
-  g.restore();
-  g.font = font(700, labelPx); g.fillStyle = C.text; g.textAlign = 'center'; g.letterSpacing = '3px';
-  g.fillText(hex.toUpperCase(), x + w / 2, y + h + labelPx + 22);
-  g.letterSpacing = '0px'; g.textAlign = 'left';
-}
-
-export interface PosterInput { config: DesignConfig; code: string; date?: Date }
-
-export async function renderPoster({ config, code, date = new Date() }: PosterInput): Promise<HTMLCanvasElement> {
+export async function renderPoster(date = new Date()): Promise<HTMLCanvasElement> {
   if (!snapshotter.take) throw new Error('Xe chưa tải xong');
   await Promise.all([300, 400, 500, 600, 700, 800].flatMap(w => [document.fonts.load(font(w, 40), 'Đ'), document.fonts.load(display(w, 40), 'Đ')]));
 
   // ---- chụp ảnh các góc
-  const HERO = { x: M, y: 390, w: W - 2 * M, h: 1400 };
-  const GAP = 40, SMALL_W = (W - 2 * M - 3 * GAP) / 4, SMALL = { y: HERO.y + HERO.h + GAP, h: 520 };
+  // ảnh 3/4 trước lớn + lưới 2×2 (trước · bên · sau · 3/4 sau)
+  const HERO = { x: M, y: 390, w: W - 2 * M, h: 1500 };
+  const GAP = 40, CELL = { w: (W - 2 * M - GAP) / 2, h: 660 }, GRID_Y = HERO.y + HERO.h + GAP;
   const smallViews: ViewId[] = ['front', 'side', 'rear', 'rear34'];
   const [heroUrl] = snapshotter.take(['front34'], HERO.w, HERO.h);
-  const smallUrls = snapshotter.take(smallViews, Math.round(SMALL_W * 2), SMALL.h * 2);  // chụp 2x rồi thu nhỏ: nét hơn
+  const smallUrls = snapshotter.take(smallViews, Math.round(CELL.w * 1.5), Math.round(CELL.h * 1.5));  // chụp lớn hơn rồi thu nhỏ: nét hơn
   const [heroImg, ...smallImgs] = await Promise.all([heroUrl, ...smallUrls].map(loadImage));
 
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -130,52 +102,29 @@ export async function renderPoster({ config, code, date = new Date() }: PosterIn
   g.letterSpacing = '6px'; g.fillStyle = C.muted; g.font = display(600, 25);
   g.fillText(t.poster.subtitle.toUpperCase(), M + mark + 38, my + 106); g.letterSpacing = '0px';
 
+  // góc phải: chỉ ngày tạo
   const pad = (n: number) => String(n).padStart(2, '0');
-  const when = `${pad(date.getHours())}:${pad(date.getMinutes())} · ${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
   g.textAlign = 'right';
-  g.letterSpacing = '4px'; g.fillStyle = C.muted; g.font = font(600, 26); g.fillText(t.poster.codeLabel.toUpperCase(), W - M, my + 22); g.letterSpacing = '0px';
-  g.fillStyle = C.text; g.font = font(800, 58); g.fillText(code, W - M, my + 84);
-  g.fillStyle = C.muted; g.font = font(400, 30); g.fillText(when, W - M, my + 128);
+  g.letterSpacing = '5px'; g.fillStyle = C.muted; g.font = font(600, 25); g.fillText(t.poster.dateLabel.toUpperCase(), W - M, my + 36); g.letterSpacing = '0px';
+  g.fillStyle = C.text; g.font = font(800, 56); g.fillText(`${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`, W - M, my + 102);
   g.textAlign = 'left';
   g.fillStyle = C.line; g.fillRect(M, 340, W - 2 * M, 2);
 
   // ---- ảnh
   drawShot(g, heroImg, HERO.x, HERO.y, HERO.w, HERO.h, t.views.front34, true);
-  smallImgs.forEach((img, i) => drawShot(g, img, M + i * (SMALL_W + GAP), SMALL.y, SMALL_W, SMALL.h, t.views[smallViews[i]]));
+  smallImgs.forEach((img, i) => drawShot(g, img, M + (i % 2) * (CELL.w + GAP), GRID_Y + Math.floor(i / 2) * (CELL.h + GAP), CELL.w, CELL.h, t.views[smallViews[i]]));
 
-  // ---- màu sử dụng: 1 tấm glass tới sát chân trang, các ô màu căn giữa (ít màu → ô to, nhiều màu → ô nhỏ)
-  const FY = H - 150, PAD = 56;
-  const PY = SMALL.y + SMALL.h + 60;
-  const P = { x: M, y: PY, w: W - 2 * M, h: FY - 50 - PY };
-  glass(g, P.x, P.y, P.w, P.h, 32);
-  const colors = usedColors(config);
-  eyebrow(g, t.poster.colors(colors.length), P.x + PAD, P.y + PAD + 26);
-  const n = colors.length;
-  const cols = n <= 4 ? 4 : n <= 6 ? 6 : 8;
-  const SG = cols === 8 ? 30 : 40;                                     // khoảng cách giữa các ô
-  const SW = (P.w - 2 * PAD - (cols - 1) * SG) / cols;                 // bề ngang 1 ô
-  const SH = cols === 4 ? 300 : cols === 6 ? 230 : 160, LBL = cols === 8 ? 30 : 36;
-  const TILE_H = SH + LBL + 40, ROW_GAP = 34;
-  const rows = Math.ceil(n / cols);
-  const areaTop = P.y + PAD + 70, areaH = P.y + P.h - PAD - areaTop;
-  const gridH = rows * TILE_H + (rows - 1) * ROW_GAP;
-  let gy = areaTop + Math.max(0, (areaH - gridH) / 2);
-  for (let r = 0; r < rows; r++) {
-    const row = colors.slice(r * cols, (r + 1) * cols);
-    const rowW = row.length * SW + (row.length - 1) * SG;
-    let gx = P.x + (P.w - rowW) / 2;                                   // căn giữa từng hàng
-    for (const hex of row) { drawSwatch(g, hex, gx, gy, SW, SH, 26, LBL); gx += SW + SG; }
-    gy += TILE_H + ROW_GAP;
-  }
-
-  // ---- chân trang
-  g.fillStyle = C.line; g.fillRect(M, FY, W - 2 * M, 2);
-  g.font = font(400, 25); g.fillStyle = C.faint;
-  g.fillText(t.poster.disclaimer, M, FY + 60);
-  g.fillText(`${BRAND.name} · ${BRAND.disclaimer}`, M, FY + 100);
-  g.textAlign = 'right'; g.fillText(`Mô hình 3D: ${BRAND.modelCredit}`, W - M, FY + 100); g.textAlign = 'left';
+  // ---- chân trang: địa chỉ web (mờ) + ghi công mô hình 3D (nhỏ, mờ hơn — giấy phép CC BY yêu cầu ghi tên tác giả)
+  const FY = GRID_Y + 2 * CELL.h + GAP + 50;
+  g.fillStyle = C.lineSoft; g.fillRect(M, FY, W - 2 * M, 2);
+  g.textAlign = 'center';
+  g.font = font(600, 34); g.fillStyle = C.faint; g.letterSpacing = '8px';
+  g.fillText(SITE_URL, W / 2, FY + 78); g.letterSpacing = '0px';
+  g.font = font(400, 19); g.fillStyle = 'rgba(200,220,255,0.3)';
+  g.fillText(`Mô hình 3D: ${BRAND.modelCredit}`, W / 2, FY + 122);
+  g.textAlign = 'left';
   return cv;
 }
 
-export const posterFileName = (code: string, date = new Date()) =>
-  `${code}_SkinVF3_${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}.png`;
+export const posterFileName = (date = new Date()) =>
+  `SkinVF3_${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}.png`;

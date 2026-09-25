@@ -1,8 +1,10 @@
 // Nút "Tải hình ảnh" → ghép Hình ảnh SkinVF3 A4 → cửa sổ xem trước + tải về.
-//  - Máy tính: Bản nhẹ (JPG) + Tải PNG (bản in 300dpi) như cũ.
+//  - Cửa sổ gắn thẳng vào <body> (portal), nằm trên cả thanh trên, nền tối đặc → nhìn rõ kết quả.
+//  - Máy tính: Bản nhẹ (JPG) + Tải PNG (bản in 300dpi).
 //  - Điện thoại: cửa sổ toàn màn hình, nút lớn ở dưới. "Lưu hình" mở bảng chia sẻ của máy (Lưu vào Ảnh, Zalo, Messenger…);
 //    máy không hỗ trợ chia sẻ file thì tải JPG. Bản in PNG (nặng, chậm trên điện thoại) chỉ tạo khi bấm.
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { create } from 'zustand';
 import { useDesign } from '../store/design';
 import { renderPoster, posterFileName } from '../poster/renderPoster';
@@ -27,8 +29,8 @@ export async function exportPoster() {
   d.setHovered(null); d.select(null); d.selectDecal(null); d.setPending(null);
   await nextFrame();
   try {
-    const date = new Date(), name = posterFileName(d.code, date);
-    const canvas = await renderPoster({ config: d.config, code: d.code, date });
+    const date = new Date(), name = posterFileName(date);
+    const canvas = await renderPoster(date);
     lastCanvas = canvas;
     const jpg = await toBlob(canvas, 'image/jpeg', 0.88);
     usePoster.setState({ busy: false, lite: URL.createObjectURL(jpg), liteFile: new File([jpg], name.replace(/\.png$/, '.jpg'), { type: 'image/jpeg' }), name });
@@ -74,7 +76,8 @@ export function PosterModal() {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
-    addEventListener('keydown', onKey); return () => removeEventListener('keydown', onKey);
+    addEventListener('keydown', onKey); document.body.classList.add('modal-open');
+    return () => { removeEventListener('keydown', onKey); document.body.classList.remove('modal-open'); };
   }, [open]);
   if (!open) return null;
   const view = (
@@ -84,7 +87,7 @@ export function PosterModal() {
     </div>
   );
 
-  if (narrow) return (
+  if (narrow) return createPortal(
     <div className="modal modal-full">
       <div className="modal-box panel">
         <header>
@@ -100,10 +103,11 @@ export function PosterModal() {
           <small>{t.mobile.saveImageHint}</small>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 
-  return (
+  return createPortal(
     <div className="modal" onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="modal-box panel">
         <header>
@@ -116,6 +120,7 @@ export function PosterModal() {
         </header>
         {view}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

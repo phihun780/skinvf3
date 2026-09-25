@@ -47,9 +47,7 @@ export const vi = {
   modes: { paint: 'Màu sơn', decal: 'Decal' },
   poster: {
     subtitle: 'Bản phối ngoại thất VinFast VF3',
-    codeLabel: 'Mã thiết kế',
-    colors: (n: number) => `Màu sử dụng (${n})`,
-    disclaimer: 'Màu hiển thị trên màn hình có thể khác màu decal / sơn thực tế — hãy đối chiếu mã màu với bảng màu tại tiệm.',
+    dateLabel: 'Ngày tạo',
     title: 'Hình ảnh SkinVF3',
     rendering: 'Đang tạo hình ảnh SkinVF3…',
     download: 'Tải PNG',
