@@ -156,16 +156,13 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
 .popover .custom { margin-top: 12px; }
 .popover section { margin-bottom: 16px; }
 .popover section > .eyebrow { display: block; margin-bottom: 10px; }
-/* ---- chọn chất bề mặt (FinishPicker): viên cầu tô màu thật + tên + mô tả, nền sáng trượt theo lựa chọn ---- */
-.finish-pick { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 4px; padding: 4px; border-radius: 16px;
-  border: 1px solid var(--line-2); background: rgba(2, 10, 40, 0.35); }
-.finish-thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n)); border-radius: 12px;
-  transform: translateX(calc(var(--i) * (100% + 4px))); transition: transform .35s cubic-bezier(.2,.8,.2,1);
-  background: linear-gradient(135deg, rgba(90,225,255,0.24), rgba(29,91,255,0.2)); box-shadow: inset 0 0 0 1px rgba(138,240,255,0.55), 0 0 18px rgba(60,200,255,0.18); pointer-events: none; }
-.finish-pick button { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 10px; border: 0; border-radius: 12px;
-  background: none; color: var(--muted); text-align: left; transition: color .25s; }
-.finish-pick button:not(.on):hover { color: var(--text); background: rgba(255,255,255,0.05); }
-.finish-pick button.on { color: #fff; }
+/* ---- chọn chất bề mặt (FinishPicker): viên cầu tô màu thật + tên + mô tả; không khung, chọn = vòng sáng quanh viên cầu ---- */
+.finish-pick { display: flex; gap: 28px; }
+.finish-pick button { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 0; border: 0; background: none; color: var(--muted); text-align: left; transition: color .25s; }
+.finish-pick button:hover, .finish-pick button.on { color: #fff; }
+.finish-pick .finish-ball { position: relative; transition: transform .2s; }
+.finish-pick button:not(.on):hover .finish-ball { transform: scale(1.06); }
+.finish-pick button.on .finish-ball::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--accent-2); box-shadow: 0 0 12px var(--accent-glow); }
 .finish-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .finish-txt b { font: 700 13px var(--display); }
 .finish-txt small { font-size: 10.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -183,12 +180,11 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
 .finish-ball.matte { box-shadow: 0 3px 8px rgba(1, 4, 24, 0.45); background-image:
     radial-gradient(circle at 38% 34%, rgba(255,255,255,0.16), rgba(255,255,255,0) 70%),
     radial-gradient(circle at 70% 78%, rgba(0,0,0,0.36), rgba(0,0,0,0) 72%); }
-/* gọn (dock điện thoại): cả hàng, không mô tả */
-.finish-pick.compact { flex: 1; border-radius: 999px; }
-.finish-pick.compact .finish-thumb { border-radius: 999px; }
-.finish-pick.compact button { justify-content: center; height: 44px; padding: 0 12px; border-radius: 999px; }
-.finish-pick.compact .finish-ball { width: 26px; height: 26px; }
-.finish-pick.compact .finish-txt b { font-size: 13.5px; }
+/* gọn (dock điện thoại): không mô tả, 2 lựa chọn cách đều */
+.finish-pick.compact { gap: 32px; padding: 2px 4px; }
+.finish-pick.compact button { height: 44px; }
+.finish-pick.compact .finish-ball { width: 30px; height: 30px; }
+.finish-pick.compact .finish-txt b { font-size: 14px; }
 .chip { height: 32px; border-radius: 10px; border: 1px solid var(--line-2); background: rgba(255,255,255,0.05); font-size: 11.5px; font-weight: 500; transition: .15s; }
 .chip:hover { background: rgba(255,255,255,0.12); }
 .chip.active { border-color: rgba(138,240,255,0.7); color: #fff; background: linear-gradient(135deg, rgba(90,225,255,0.3), rgba(29,91,255,0.22));
