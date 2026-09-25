@@ -21,6 +21,8 @@ interface CarProps {
   showcase?: DesignConfig;
 }
 
+const NO_CAST_SHADOW = ['mirror', 'mirrorBase'];
+
 export function Car({ onLoaded, showcase }: CarProps) {
   const { scene: loaded } = useGLTF(MODEL_URL);
   // trang chủ có 2 khung 3D (hero + trình phối): bản trưng bày dùng bản sao, 1 đối tượng three.js chỉ gắn được 1 nơi
@@ -33,7 +35,9 @@ export function Car({ onLoaded, showcase }: CarProps) {
     scene.updateMatrixWorld(true);
     scene.traverse(o => {
       if (!(o instanceof THREE.Mesh)) return;
-      o.castShadow = o.receiveShadow = true;
+      o.receiveShadow = true;
+      // gương không đổ bóng lên thân xe (vệt tối ở cửa trước làm khó nhìn decal dán ở đó)
+      o.castShadow = !NO_CAST_SHADOW.includes(o.userData.zone);
       if (isEditable(o.userData.zone)) o.material = materials[o.userData.zone];
       const group = zoneInfo(o.userData.zone)?.group;
       if (!showcase && group && (DECAL_TARGET_GROUPS as readonly string[]).includes(group)) decalTargets.push(o);
