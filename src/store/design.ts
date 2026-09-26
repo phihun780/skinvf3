@@ -1,4 +1,4 @@
-// Trạng thái thiết kế: màu/chất từng vùng + decal, hoàn tác/làm lại, chế độ (màu sơn / decal), vùng đang rê/chọn,
+// Trạng thái thiết kế: màu/chất từng vùng + decal + phụ kiện, hoàn tác/làm lại, chế độ (màu sơn / decal), vùng đang rê/chọn,
 // tự lưu vào localStorage.
 import { create } from 'zustand';
 import { DEFAULT_CONFIG, type DesignConfig, type ZoneStyle } from '../config/zones';
@@ -8,6 +8,7 @@ import { normalizeFinish } from '../config/finishes';
 const normalize = (c: DesignConfig): DesignConfig =>
   Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { ...v, finish: normalizeFinish(v.finish) }]));
 import { MIRROR_X } from '../config/decals';
+import { normalizeFitted, type Fitted } from '../config/accessories';
 
 const STORAGE_KEY = 'vf3-design';
 const HISTORY_LIMIT = 100;
@@ -28,7 +29,7 @@ export interface Decal {
 /** Decal đang chờ dán (đã chọn trong panel, chưa bấm lên xe). */
 export type DecalDraft = Pick<Decal, 'label' | 'src' | 'aspect'>;
 
-interface Design { config: DesignConfig; decals: Decal[] }
+interface Design { config: DesignConfig; decals: Decal[]; accessories: Fitted }
 interface Saved extends Design { code: string }
 
 const load = (): Saved | null => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch { return null; } };
@@ -42,7 +43,7 @@ const newCode = () => 'VF3-' + Math.random().toString(36).slice(2, 6).toUpperCas
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 export interface Selection { zone: string; x: number; y: number }  // toạ độ màn hình nơi bấm
-export type Mode = 'paint' | 'decal';
+export type Mode = 'paint' | 'decal' | 'accessory';
 
 interface DesignState extends Design {
   code: string;
@@ -60,7 +61,7 @@ interface DesignState extends Design {
   preview: (zone: string, style: Partial<ZoneStyle>) => void;
   commitPreview: () => void;
   replaceAll: (config: DesignConfig) => void;
-  /** Về màu mặc định và xoá toàn bộ decal (1 bước hoàn tác). */
+  /** Về màu mặc định, xoá toàn bộ decal, tháo phụ kiện (1 bước hoàn tác). */
   resetAll: () => void;
   // decal
   addDecal: (draft: DecalDraft, at: { position: Vec3; normal: Vec3 }, size: number) => void;
@@ -69,6 +70,9 @@ interface DesignState extends Design {
   removeDecal: (id: string) => void;
   mirrorDecal: (id: string) => void;
   moveLayer: (id: string, dir: 1 | -1) => void;
+  // phụ kiện
+  /** Lắp / tháo 1 phụ kiện (1 bước hoàn tác). */
+  toggleAccessory: (id: string) => void;
   selectDecal: (id: string | null) => void;
   setPending: (draft: DecalDraft | null) => void;
   // chung
@@ -84,7 +88,7 @@ const saved = load();
 let previewBase: Design | null = null;
 
 export const useDesign = create<DesignState>((set, get) => {
-  const snapshot = (): Design => ({ config: get().config, decals: get().decals });
+  const snapshot = (): Design => ({ config: get().config, decals: get().decals, accessories: get().accessories });
   const save = () => persist({ ...snapshot(), code: get().code });
   const commit = (next: Partial<Design>) => {
     const before = snapshot();
@@ -98,6 +102,7 @@ export const useDesign = create<DesignState>((set, get) => {
     // trộn với mặc định để thiết kế lưu từ bản cũ (thiếu vùng mới / chưa có decal) vẫn mở được
     config: normalize({ ...DEFAULT_CONFIG, ...saved?.config }),
     decals: saved?.decals ?? [],
+    accessories: normalizeFitted(saved?.accessories),
     code: saved?.code ?? newCode(),
     past: [],
     future: [],
@@ -121,7 +126,7 @@ export const useDesign = create<DesignState>((set, get) => {
     },
     replaceAll: config => commit({ config: normalize({ ...DEFAULT_CONFIG, ...config }) }),
     resetAll: () => {
-      commit({ config: { ...DEFAULT_CONFIG }, decals: [] });
+      commit({ config: { ...DEFAULT_CONFIG }, decals: [], accessories: {} });
       set({ selected: null, selectedDecal: null, pending: null });
     },
 
@@ -153,6 +158,11 @@ export const useDesign = create<DesignState>((set, get) => {
       if (i < 0 || j < 0 || j >= list.length) return;
       [list[i], list[j]] = [list[j], list[i]];
       commit({ decals: list });
+    },
+    toggleAccessory: id => {
+      const next = { ...get().accessories };
+      if (next[id]) delete next[id]; else next[id] = true;
+      commit({ accessories: next });
     },
     selectDecal: id => set({ selectedDecal: id }),
     setPending: draft => set({ pending: draft }),

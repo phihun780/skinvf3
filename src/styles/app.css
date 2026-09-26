@@ -112,17 +112,18 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
 /* ---- công tắc chế độ + gợi ý (giữa phía trên) ---- */
 .mode { position: fixed; top: 82px; left: 50%; transform: translateX(-50%); z-index: 12; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 /* tab chữ: 2 cột bằng nhau, vạch sáng trượt dưới tab đang chọn */
-.mode-tabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; width: 220px; }
+.mode-tabs { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); width: 330px; }
 .mode-tabs button { height: 38px; border: none; background: none; color: var(--faint); white-space: nowrap;
   font: 700 12px var(--display); letter-spacing: 0.16em; text-transform: uppercase; transition: color .25s, text-shadow .25s; }
 .mode-tabs button:hover { color: var(--text); }
 .mode-tabs button.active { color: #fff; text-shadow: 0 0 14px rgba(138, 240, 255, 0.55); }
 .mode-tabs::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent); }
-.mode-bar { position: absolute; bottom: -1px; left: 0; width: 50%; height: 3px; display: flex; justify-content: center; pointer-events: none;
+.mode-bar { position: absolute; bottom: -1px; left: 0; width: calc(100% / 3); height: 3px; display: flex; justify-content: center; pointer-events: none;
   transition: transform .35s cubic-bezier(.2,.8,.2,1); }
 .mode-bar::after { content: ''; width: 46px; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent-2), var(--accent));
   box-shadow: 0 0 12px var(--accent), 0 0 24px var(--accent-glow); }
 .mode-tabs.on-decal .mode-bar { transform: translateX(100%); }
+.mode-tabs.on-accessory .mode-bar { transform: translateX(200%); }
 /* ghi chú nhỏ, mờ, không khung */
 .hint { padding: 0; white-space: nowrap; font-size: 11px; letter-spacing: 0.02em; color: var(--faint); opacity: .8; transition: opacity .3s; pointer-events: none; }
 .hint.hide { opacity: 0; }
@@ -196,6 +197,21 @@ body.locked .topbar { right: var(--sbw, 0px); }  /* trang không cuộn: chừa 
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 /* góc trái dưới, hẹp để không đè thanh góc nhìn ở giữa */
 .credit { position: fixed; left: var(--edge); bottom: 16px; z-index: 5; max-width: 260px; font-size: 10.5px; line-height: 1.45; color: var(--faint); pointer-events: none; }
+
+/* ---- phụ kiện (AccessoryPanel) ---- */
+.acc-list { display: flex; flex-direction: column; gap: 10px; }
+.acc-card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 10px; border-radius: 16px; text-align: left;
+  border: 1px solid var(--line-2); background: rgba(255,255,255,0.05); transition: border-color .2s, background .2s, box-shadow .2s; }
+.acc-card:hover { background: rgba(255,255,255,0.1); }
+.acc-card img { flex: none; width: 76px; height: 76px; border-radius: 12px; object-fit: contain; background: #f4f5f6; }
+.acc-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.acc-txt b { font: 700 14px var(--display); }
+.acc-txt small { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.acc-txt em { margin-top: 4px; font: 600 11px var(--display); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-2); }
+.acc-txt em u { text-decoration: none; color: var(--faint); }
+.acc-card.on { border-color: rgba(138,240,255,0.7); background: linear-gradient(135deg, rgba(90,225,255,0.2), rgba(29,91,255,0.16)); box-shadow: 0 0 16px rgba(60,200,255,0.2); }
+.acc-strip .acc-card { flex: none; width: 250px; padding: 8px; }
+.acc-strip .acc-card img { width: 60px; height: 60px; }
 
 /* ---- panel decal ---- */
 .decal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -278,6 +294,8 @@ body.modal-open { overflow: hidden; }
   .topbar .btn { height: 34px; padding: 0 12px; font-size: 12px; }
   .topbar .btn.primary { font-size: 10px; letter-spacing: 0.06em; }
   .mode { top: 68px; }
+  .mode-tabs { width: 264px; }                      /* 3 tab + chừa chỗ nút ✕ góc phải */
+  .mode-tabs button { letter-spacing: 0.1em; font-size: 11.5px; }
   .hint { display: none; }
   /* thanh góc nhìn cuộn ngang thay vì tràn khỏi màn hình */
   .toolbar { bottom: 12px; padding: 0 8px; }

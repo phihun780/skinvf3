@@ -99,12 +99,12 @@ export function HoverTip() {
 export function ModeSwitch() {
   const mode = useDesign(s => s.mode), selected = useDesign(s => s.selected), setMode = useDesign(s => s.setMode);
   const touch = useMedia(TOUCH_QUERY);
-  const hint = mode === 'decal' ? (touch ? t.mobile.decalHint : t.decalHint) : selected ? null : touch ? t.mobile.hint : t.hint;
+  const hint = mode === 'accessory' ? t.accessory.hint : mode === 'decal' ? (touch ? t.mobile.decalHint : t.decalHint) : selected ? null : touch ? t.mobile.hint : t.hint;
   return (
     <div className="mode">
       {/* tab chữ + vạch sáng trượt dưới tab đang chọn (không đóng khung nút) */}
       <div className={'mode-tabs on-' + mode} role="tablist">
-        {(['paint', 'decal'] as const).map(m => (
+        {(['paint', 'decal', 'accessory'] as const).map(m => (
           <button key={m} role="tab" aria-selected={mode === m} className={mode === m ? 'active' : ''} onClick={() => setMode(m)}>{t.modes[m]}</button>
         ))}
         <i className="mode-bar" aria-hidden />

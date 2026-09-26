@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { Car } from './Car';
 import { DecalController, Decals } from './Decals';
 import { DecalGizmo } from './DecalGizmo';
+import { WheelCovers } from './WheelCover';
 import { useViewer, VIEWS, type ViewId } from '../store/viewer';
 import { useDesign } from '../store/design';
 import { LAYOUT, frameLeft } from '../config/layout';
@@ -116,7 +117,7 @@ function CameraRig({ box, onPlaced }: { box: THREE.Box3; onPlaced: () => void })
     const st = useDesign.getState(), sheetTop = useViewer.getState().sheetTop;
     const want = size.width <= LAYOUT.mobile
       ? (sheetTop != null ? { x: 0, y: size.height / 2 - (64 + Math.min(sheetTop, size.height - 72)) / 2 } : { x: 0, y: 0 })
-      : (st.selected || st.mode === 'decal') ? panelShift(size.width, size.height) : { x: 0, y: 0 };
+      : (st.selected || st.mode !== 'paint') ? panelShift(size.width, size.height) : { x: 0, y: 0 };
     const cur = shift.current, v = camera.view;
     const settled = Math.abs(want.x - cur.x) < 0.5 && Math.abs(want.y - cur.y) < 0.5;
     // bỏ qua nếu không đổi gì (kể cả kích thước khung)
@@ -201,6 +202,12 @@ export function Lights() {
   );
 }
 
+/** Phụ kiện đang lắp (tab Phụ kiện). */
+function Accessories() {
+  const fitted = useDesign(s => s.accessories);
+  return <WheelCovers visible={!!fitted.wheelCover} />;
+}
+
 export function Studio({ active = true }: { active?: boolean }) {
   const [box, setBox] = useState<THREE.Box3 | null>(null);
   // hiện khung 3D khi camera đã vào đúng góc (tránh 1–2 khung hình xe to sai góc lúc vừa chuyển trang)
@@ -228,6 +235,7 @@ export function Studio({ active = true }: { active?: boolean }) {
           <Decals />
           <DecalController />
           <DecalGizmo />
+          <Accessories />
         </>
       )}
     </Canvas>

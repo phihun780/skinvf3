@@ -12,6 +12,7 @@ import { imageAspect, prepareUpload, renderText } from './decalImage';
 import { DockTools, toast } from './Chrome';
 import { useSheetTop } from './useSheetTop';
 import { FinishPicker } from './FinishPicker';
+import { AccessoryList } from './AccessoryPanel';
 import { t } from '../config/i18n/vi';
 
 export function MobileDock({ active }: { active: boolean }) {
@@ -22,7 +23,7 @@ export function MobileDock({ active }: { active: boolean }) {
   return (
     <div className="mdock" ref={box}>
       <i className="mdock-grip" aria-hidden />
-      {mode === 'paint' ? <PaintDock /> : <DecalDock />}
+      {mode === 'paint' ? <PaintDock /> : mode === 'decal' ? <DecalDock /> : <div className="dock-body"><AccessoryList strip /></div>}
       <DockTools />
     </div>
   );

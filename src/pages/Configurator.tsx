@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Studio } from '../three/Studio';
 import { ColorPopover } from '../ui/ColorPopover';
 import { DecalPanel } from '../ui/DecalPanel';
+import { AccessoryPanel } from '../ui/AccessoryPanel';
 import { PosterModal } from '../ui/PosterModal';
 import { HoverTip, Loader, ModeSwitch, Toolbar } from '../ui/Chrome';
 import { useViewer } from '../store/viewer';
@@ -49,6 +50,7 @@ export function Configurator() {
       <ColorPopover />
       {narrow && <MobileDock active={!gated} />}
       <DecalPanel />
+      <AccessoryPanel />
       {!touch && <HoverTip />}
       <PosterModal />
       <Loader />
