@@ -20,9 +20,9 @@ export const DECAL_SIZE = { min: 0.08, max: 4, initial: 0.45 };  // bề ngang (
 export const DECAL_DEPTH = 0.22;
 /** Chỉ dán lên vùng sơn và ốp nhựa (không kính, đèn, bánh xe). */
 export const DECAL_TARGET_GROUPS = ['paint', 'trim'] as const;
-/** Ốp nhựa phía dưới: không in decal (người dùng chủ yếu dán lên thân xe). Decal vẫn kéo / phóng to tự do qua các vùng
+/** Ốp nhựa phía dưới + ốp trụ A + gương: không in decal (người dùng chủ yếu dán lên thân xe). Decal vẫn kéo / phóng to tự do qua các vùng
  *  này, chỉ phần nằm trên ốp là không hiện (như bị cắt theo mép ốp). */
-export const NO_DECAL_ZONES = ['bumperF', 'lowerF', 'skirt', 'bumperR', 'lowerR'];
+export const NO_DECAL_ZONES = ['bumperF', 'lowerF', 'skirt', 'bumperR', 'lowerR', 'aPillar', 'mirrorBase', 'mirror'];
 
 /** Mặt phẳng đối xứng trái/phải của model (model hơi lệch tâm), dùng cho "chép sang bên kia". */
 export const MIRROR_X = -0.0285;

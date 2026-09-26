@@ -83,7 +83,7 @@ Toàn bộ logic chia vùng nằm ở `shared/vf3-zones.js` (dùng chung cho `in
 Web **1 trang** (`src/pages/Home.tsx`): Hero · Tính năng cơ bản (#tinh-nang) · Sử dụng đơn giản · Mẫu tham khảo (#mau) · **Tự phối màu (#phoi-xe, trình phối nhúng trong khung `.studio-embed`)** · Câu hỏi thường gặp · Footer. Menu trên cùng (Trang chủ · Tính năng · Mẫu tham khảo · Tự phối màu) chỉ cuộn mượt tới mục và tự sáng mục đang xem. Bấm thẻ mẫu = áp mẫu vào trình phối + cuộn xuống. Trình phối chỉ dựng khi cuộn tới gần, 2 khung 3D (hero + trình phối) tự dừng vẽ khi khuất. Trong trình phối: kéo để xoay, lăn chuột để cuộn trang, Ctrl + lăn để phóng to. Link cũ `/phoi-xe?preset=<id>` vẫn chạy (áp mẫu rồi chuyển về `/#phoi-xe`).
 
 ## Vùng không in decal
-`NO_DECAL_ZONES` trong `src/config/decals.ts`: ốp cản dưới trước, cản dưới + ốp vòm trước, ốp sườn, cản sau + ốp vòm sau, ốp cản dưới sau. Decal vẫn kéo / đặt / phóng to tự do qua các vùng này (tối đa 4m), chỉ phần nằm trên ốp không hiện → người dùng phóng to decal rồi dùng mép ốp để "cắt" decal.
+`NO_DECAL_ZONES` trong `src/config/decals.ts`: ốp cản dưới trước, cản dưới + ốp vòm trước, ốp sườn, cản sau + ốp vòm sau, ốp cản dưới sau, ốp tam giác trụ A, chân gương, vỏ gương. Decal vẫn kéo / đặt / phóng to tự do qua các vùng này (tối đa 4m), chỉ phần nằm trên ốp không hiện → người dùng phóng to decal rồi dùng mép ốp để "cắt" decal.
 
 ## Phụ kiện (tab thứ 3 của trình phối)
 - Danh sách ở `src/config/accessories.ts`; trạng thái lắp/tháo nằm trong thiết kế (`accessories` trong `src/store/design.ts`): có hoàn tác, tự lưu, Reset thì tháo hết, có trong Hình ảnh SkinVF3.
