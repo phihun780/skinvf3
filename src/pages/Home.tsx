@@ -82,7 +82,7 @@ function Hero() {
           {looks.map((q, k) => (
             <button key={q.id + k} role="radio" aria-checked={k === i} title={q.name} className={k === i ? 'on' : ''}
               onClick={() => { setAuto(false); setI(k); }}
-              style={{ background: `linear-gradient(135deg, ${q.config.body.color} 52%, ${q.config.roof.color} 52%)` }} />
+              style={{ background: `linear-gradient(135deg, ${q.config.body.color} 51.5%, ${q.config.roof.color} 52.5%) border-box` }} />
           ))}
         </div>
       )}

@@ -11,7 +11,8 @@ import { LookExtras } from './LookExtras';
 /** Sửa 1 mục: truyền phần thay đổi, hoặc hàm nhận nội dung mới nhất (dùng khi cập nhật sau 1 việc chạy nền). */
 export type Set<T> = (patch: Partial<T> | ((prev: T) => Partial<T>)) => void;
 const newId = (p: string) => p + '-' + Math.random().toString(36).slice(2, 8);
-const swatch = (c: DesignConfig) => `linear-gradient(135deg, ${c.body.color} 52%, ${c.roof.color} 52%)`;
+// nửa thân / nửa nóc; mép chéo mềm 1% (hết răng cưa); tô cả dưới viền (không lặp dải màu ở mép)
+const swatch = (c: DesignConfig) => `linear-gradient(135deg, ${c.body.color} 51.5%, ${c.roof.color} 52.5%) border-box`;
 
 function Head({ title, onReset }: { title: string; onReset: () => void }) {
   return (
