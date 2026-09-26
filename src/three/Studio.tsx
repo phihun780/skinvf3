@@ -205,7 +205,8 @@ export function Lights() {
 /** Phụ kiện đang lắp (tab Phụ kiện). */
 function Accessories() {
   const fitted = useDesign(s => s.accessories);
-  return <WheelCovers visible={!!fitted.wheelCover} />;
+  // chỉ tải ảnh ốp khi đã lắp; Suspense: đang tải ảnh không làm trống cả khung 3D
+  return <Suspense fallback={null}>{fitted.wheelCover && <WheelCovers visible />}</Suspense>;
 }
 
 export function Studio({ active = true }: { active?: boolean }) {

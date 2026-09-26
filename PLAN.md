@@ -85,7 +85,7 @@ Web **1 trang** (`src/pages/Home.tsx`): Hero · Tính năng cơ bản (#tinh-nan
 ## Phụ kiện (tab thứ 3 của trình phối)
 - Danh sách ở `src/config/accessories.ts`; trạng thái lắp/tháo nằm trong thiết kế (`accessories` trong `src/store/design.ts`): có hoàn tác, tự lưu, Reset thì tháo hết, có trong Hình ảnh SkinVF3.
 - Giao diện: máy tính = bảng bên phải (`src/ui/AccessoryPanel.tsx`), điện thoại = dải thẻ trong dock. Chạm thẻ = lắp / tháo.
-- **Ốp lazang tua-bin** (`src/three/WheelCover.tsx`): khối 3D dựng bằng code theo ảnh mẫu (`public/accessories/wheel-cover.webp`) — mâm nền trắng hơi vồng, viền đen, 5 cánh xám than có hốc + gân, đầu cánh cắt xéo theo cung (tạo khe trắng nhọn), tâm ngũ giác, logo V bạc. Tự tìm 4 mâm trong model (vùng `rim`), lắp đè ra ngoài mép mâm (`RIM_LIP`). Chỉnh dáng: các hằng số đầu file (`W0/W1` bề rộng cánh, `TWIST` độ nghiêng, `TIP_CUT` cắt đầu cánh, màu ở `makeMaterials`).
+- **Ốp lazang tua-bin** (`src/three/WheelCover.tsx`): dán chính ảnh thiết kế (`public/accessories/wheel-cover-face.webp` — ảnh gốc cắt tròn, nền trong suốt, 1024px) lên mặt ốp hơi vồng (`DOME`) + thành viền đen (`EDGE`) → giữ nguyên 100% thiết kế. Tự tìm 4 mâm trong model (vùng `rim`), lắp đè ra ngoài mép mâm (`RIM_LIP`); ảnh không bị lật ở bên nào. Đổi mẫu ốp: thay file ảnh (vuông, hình tròn sát mép, nền trong suốt) + ảnh thẻ `wheel-cover.webp`.
 - Thêm phụ kiện mới: 1 mục trong `ACCESSORIES` + 1 khối 3D, gắn vào `Accessories()` trong `src/three/Studio.tsx`.
 
 ## Điện thoại (màn cảm ứng)
