@@ -85,6 +85,8 @@ Web **1 trang** (`src/pages/Home.tsx`): Hero · Tính năng cơ bản (#tinh-nan
 ## Vùng không in decal
 `NO_DECAL_ZONES` trong `src/config/decals.ts`: ốp cản dưới trước, cản dưới + ốp vòm trước, ốp sườn, cản sau + ốp vòm sau, ốp cản dưới sau, ốp tam giác trụ A, chân gương, vỏ gương. Decal vẫn kéo / đặt / phóng to tự do qua các vùng này (tối đa 4m), chỉ phần nằm trên ốp không hiện → người dùng phóng to decal rồi dùng mép ốp để "cắt" decal.
 
+Decal chỉ in trên **vùng gốc** (vùng ngay dưới điểm dán, `anchorZone` trong `src/three/Decals.tsx`): dán ở thân xe thì không lem sang capo / nóc; điểm dán nằm trên ốp không in decal thì vùng gốc = thân xe. Độ sâu chiếu tăng theo cỡ decal (`decalDepth`), bỏ mặt chiếu quá xiên (`DECAL_MIN_FACING`).
+
 ## Phụ kiện (tab thứ 3 của trình phối)
 - Danh sách ở `src/config/accessories.ts`; trạng thái lắp/tháo nằm trong thiết kế (`accessories` trong `src/store/design.ts`): có hoàn tác, tự lưu, Reset thì tháo hết, có trong Hình ảnh SkinVF3.
 - Giao diện: máy tính = bảng bên phải (`src/ui/AccessoryPanel.tsx`), điện thoại = dải thẻ trong dock. Chạm thẻ = lắp / tháo.

@@ -35,14 +35,23 @@ function dropGrazing(g: THREE.BufferGeometry, n: THREE.Vector3) {
 }
 
 const _o = new THREE.Object3D(), _box = new THREE.Box3(), _sphere = new THREE.Sphere();
+/** Vùng gốc của decal = vùng nằm ngay dưới điểm dán. Decal chỉ in trên vùng này (như tô màu từng vùng: dán ở thân xe
+ *  thì không lem sang capo / nóc). Điểm dán nằm trên ốp không in decal (NO_DECAL_ZONES) → in lên thân xe (cắt theo mép ốp). */
+const _ray = new THREE.Raycaster();
+function anchorZone(p: THREE.Vector3, n: THREE.Vector3): string {
+  _ray.set(p.clone().addScaledVector(n, 0.03), n.clone().negate()); _ray.far = 0.08;
+  const z = _ray.intersectObjects(decalTargets, false)[0]?.object.userData.zone as string | undefined;
+  return !z || NO_DECAL_ZONES.includes(z) ? 'body' : z;
+}
+
 function buildGeometry(position: Vec3, normal: Vec3, size: number, aspect: number, rotation: number) {
   const p = new THREE.Vector3(...position), n = new THREE.Vector3(...normal).normalize();
   _o.position.copy(p); _o.lookAt(p.clone().add(n)); _o.rotateZ(THREE.MathUtils.degToRad(rotation));
   const dims = new THREE.Vector3(size, size / aspect, decalDepth(size));
   _sphere.set(p, dims.length() / 2);
-  const parts: THREE.BufferGeometry[] = [];
+  const parts: THREE.BufferGeometry[] = [], zone = anchorZone(p, n);
   for (const mesh of decalTargets) {
-    if (NO_DECAL_ZONES.includes(mesh.userData.zone)) continue;  // ốp nhựa dưới: không in decal lên
+    if (mesh.userData.zone !== zone) continue;  // chỉ in trên vùng gốc (ốp không in decal không bao giờ là vùng gốc)
     _box.copy(mesh.geometry.boundingBox ?? mesh.geometry.computeBoundingBox()!).applyMatrix4(mesh.matrixWorld);
     if (!_box.intersectsSphere(_sphere)) continue;  // bỏ qua mảng ở xa: kéo decal mượt hơn
     const g = dropGrazing(new DecalGeometry(mesh, p, _o.rotation, dims), n);
