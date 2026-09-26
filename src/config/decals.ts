@@ -18,6 +18,10 @@ export const UPLOAD_MAX_PX = 1024;
 export const DECAL_SIZE = { min: 0.08, max: 4, initial: 0.45 };  // bề ngang (m); tối đa 4m (dài hơn cả xe) để phóng to rồi cắt theo mép ốp
 /** Độ sâu khối chiếu: đủ ôm bề mặt cong, không xuyên sang mặt bên kia xe. */
 export const DECAL_DEPTH = 0.22;
+/** Độ sâu khối chiếu tăng theo cỡ decal (decal to phủ được cả phần thân cong ra xa), tối đa ~ nửa bề ngang xe. */
+export const decalDepth = (size: number) => Math.min(0.75, Math.max(DECAL_DEPTH, size * 0.45));
+/** Bỏ các mặt bị chiếu quá xiên (góc giữa mặt và hướng dán > ~72°): tránh vệt kéo dãn ở góc cua, không xuyên sang bên kia xe. */
+export const DECAL_MIN_FACING = 0.3;
 /** Chỉ dán lên vùng sơn và ốp nhựa (không kính, đèn, bánh xe). */
 export const DECAL_TARGET_GROUPS = ['paint', 'trim'] as const;
 /** Ốp nhựa phía dưới + ốp trụ A + gương: không in decal (người dùng chủ yếu dán lên thân xe). Decal vẫn kéo / phóng to tự do qua các vùng

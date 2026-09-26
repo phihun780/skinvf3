@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { DecalGeometry } from 'three/addons/geometries/DecalGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { useDesign, type Decal } from '../store/design';
-import { DECAL_DEPTH, DECAL_SIZE, NO_DECAL_ZONES } from '../config/decals';
+import { DECAL_MIN_FACING, DECAL_SIZE, NO_DECAL_ZONES, decalDepth } from '../config/decals';
 import { decalTargets } from './targets';
 
 type Vec3 = [number, number, number];
@@ -14,18 +14,38 @@ const CLICK_TOLERANCE = 4;
 const noRaycast = () => {};
 
 // ---- hình học
+/** Giữ lại các tam giác quay mặt về hướng dán (pháp tuyến · n ≥ DECAL_MIN_FACING); bỏ mặt xiên / quay lưng. */
+function dropGrazing(g: THREE.BufferGeometry, n: THREE.Vector3) {
+  const nor = g.attributes.normal, count = g.attributes.position.count;   // DecalGeometry: không đánh chỉ số, pháp tuyến theo world
+  const keep: number[] = [], v = new THREE.Vector3();
+  for (let t = 0; t < count; t += 3) {
+    let ok = true;
+    for (let k = 0; k < 3 && ok; k++) ok = v.fromBufferAttribute(nor, t + k).dot(n) >= DECAL_MIN_FACING;
+    if (ok) keep.push(t);
+  }
+  if (keep.length * 3 === count) return g;
+  const out = new THREE.BufferGeometry();
+  for (const name of Object.keys(g.attributes)) {
+    const a = g.attributes[name] as THREE.BufferAttribute, size = a.itemSize, arr = new Float32Array(keep.length * 3 * size);
+    keep.forEach((t, i) => arr.set((a.array as Float32Array).subarray(t * size, (t + 3) * size), i * 3 * size));
+    out.setAttribute(name, new THREE.BufferAttribute(arr, size));
+  }
+  g.dispose();
+  return out;
+}
+
 const _o = new THREE.Object3D(), _box = new THREE.Box3(), _sphere = new THREE.Sphere();
 function buildGeometry(position: Vec3, normal: Vec3, size: number, aspect: number, rotation: number) {
   const p = new THREE.Vector3(...position), n = new THREE.Vector3(...normal).normalize();
   _o.position.copy(p); _o.lookAt(p.clone().add(n)); _o.rotateZ(THREE.MathUtils.degToRad(rotation));
-  const dims = new THREE.Vector3(size, size / aspect, DECAL_DEPTH);
+  const dims = new THREE.Vector3(size, size / aspect, decalDepth(size));
   _sphere.set(p, dims.length() / 2);
   const parts: THREE.BufferGeometry[] = [];
   for (const mesh of decalTargets) {
     if (NO_DECAL_ZONES.includes(mesh.userData.zone)) continue;  // ốp nhựa dưới: không in decal lên
     _box.copy(mesh.geometry.boundingBox ?? mesh.geometry.computeBoundingBox()!).applyMatrix4(mesh.matrixWorld);
     if (!_box.intersectsSphere(_sphere)) continue;  // bỏ qua mảng ở xa: kéo decal mượt hơn
-    const g = new DecalGeometry(mesh, p, _o.rotation, dims);
+    const g = dropGrazing(new DecalGeometry(mesh, p, _o.rotation, dims), n);
     if (g.attributes.position.count) parts.push(g); else g.dispose();
   }
   if (!parts.length) return null;
