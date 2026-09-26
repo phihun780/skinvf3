@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { DecalGeometry } from 'three/addons/geometries/DecalGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { useDesign, type Decal } from '../store/design';
-import { DECAL_DEPTH, DECAL_SIZE } from '../config/decals';
+import { DECAL_DEPTH, DECAL_SIZE, NO_DECAL_ZONES } from '../config/decals';
 import { decalTargets } from './targets';
 
 type Vec3 = [number, number, number];
@@ -22,6 +22,7 @@ function buildGeometry(position: Vec3, normal: Vec3, size: number, aspect: numbe
   _sphere.set(p, dims.length() / 2);
   const parts: THREE.BufferGeometry[] = [];
   for (const mesh of decalTargets) {
+    if (NO_DECAL_ZONES.includes(mesh.userData.zone)) continue;  // ốp nhựa dưới: không in decal lên
     _box.copy(mesh.geometry.boundingBox ?? mesh.geometry.computeBoundingBox()!).applyMatrix4(mesh.matrixWorld);
     if (!_box.intersectsSphere(_sphere)) continue;  // bỏ qua mảng ở xa: kéo decal mượt hơn
     const g = new DecalGeometry(mesh, p, _o.rotation, dims);
@@ -111,6 +112,8 @@ export function DecalController() {
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
     const hit = ray.intersectObjects(decalTargets, false)[0];
+    // ốp nhựa dưới vẫn chặn tia (không xuyên qua thân phía sau) và vẫn cho đặt / kéo decal tới đó — chỉ là phần decal
+    // nằm trên ốp không in ra (buildGeometry bỏ qua) → người dùng có thể dùng mép ốp để "cắt" decal
     if (!hit?.face) return null;
     const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
     if (n.dot(ray.ray.direction) > 0) n.negate();  // mặt quay lưng (vật liệu 2 mặt)
