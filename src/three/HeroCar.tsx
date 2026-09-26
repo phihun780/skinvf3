@@ -1,6 +1,10 @@
 // Xe 3D ở hero trang chủ: tự xoay chậm, nền trong suốt (nằm trên nền mesh), không bắt chuột.
 // Khung hình thứ 3 (bóng đổ đã vẽ xong) được chụp lại làm ảnh chờ cho lần mở trang sau (heroStill.ts).
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { ShowcaseDecals } from './Decals';
+import { WheelCovers } from './WheelCover';
+import type { LookDecal } from '../content/schema';
+import type { Fitted } from '../config/accessories';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
@@ -50,13 +54,17 @@ function Turntable({ box, onReady, onCapture }: { box: THREE.Box3; onReady: () =
 
 interface HeroCarProps {
   config: DesignConfig;
+  decals?: LookDecal[];
+  accessories?: Fitted;
   onReady: () => void;
   onCapture?: (url: string) => void;
   active?: boolean;
 }
 
-export function HeroCar({ config, onReady, onCapture, active = true }: HeroCarProps) {
+export function HeroCar({ config, decals = [], accessories = {}, onReady, onCapture, active = true }: HeroCarProps) {
   const [box, setBox] = useState<THREE.Box3 | null>(null);
+  const [targets, setTargets] = useState<THREE.Mesh[]>([]);
+  const loaded = useCallback((b: THREE.Box3, t: THREE.Mesh[]) => { setBox(b); setTargets(t); }, []);
   return (
     <Canvas
       shadows dpr={[1, TOUCH ? 1.5 : 2]} frameloop={active ? 'always' : 'never'} camera={{ fov: 26, near: 0.05, far: 60, position: [4, 1.5, 5] }}
@@ -64,11 +72,13 @@ export function HeroCar({ config, onReady, onCapture, active = true }: HeroCarPr
       style={{ pointerEvents: 'none' }}
     >
       <Lights />
-      <Suspense fallback={null}><Car showcase={config} onLoaded={setBox} /></Suspense>
+      <Suspense fallback={null}><Car showcase={config} onLoaded={loaded} /></Suspense>
       {box && (
         <>
           <ContactShadows position={[0, box.min.y + 0.002, 0]} opacity={0.75} scale={7} blur={2.4} far={1.6} resolution={TOUCH ? 512 : 1024} color="#010516" />
           <Turntable box={box} onReady={onReady} onCapture={onCapture} />
+          <ShowcaseDecals decals={decals} targets={targets} />
+          <Suspense fallback={null}>{accessories.wheelCover && <WheelCovers visible />}</Suspense>
         </>
       )}
     </Canvas>

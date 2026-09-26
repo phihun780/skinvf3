@@ -5,9 +5,17 @@ import { DEFAULT_CONFIG, EDITABLE, type DesignConfig } from '../config/zones';
 import { normalizeFinish } from '../config/finishes';
 import { PRESETS } from '../config/presets';
 import { STEP_ICONS } from '../ui/icons';
+import { DECAL_SIZE } from '../config/decals';
+import { normalizeFitted, type Fitted } from '../config/accessories';
 
-/** 1 màu xe cho mockup ở hero (các chấm màu bên dưới xe, tự đổi lần lượt). */
-export interface HeroLook { id: string; name: string; config: DesignConfig }
+/** Decal trên xe mockup (cùng dạng decal của trình phối; ảnh là đường dẫn trong web: /decals/… hoặc /api/media/…). */
+export interface LookDecal {
+  label: string; src: string; aspect: number;
+  position: [number, number, number]; normal: [number, number, number];
+  size: number; rotation: number; opacity: number; flip: boolean;
+}
+/** 1 màu xe cho mockup ở hero (các chấm màu bên dưới xe, tự đổi lần lượt) + decal + phụ kiện. */
+export interface HeroLook { id: string; name: string; config: DesignConfig; decals: LookDecal[]; accessories: Fitted }
 
 export interface HeroContent {
   line1: string;          // tiêu đề dòng 1 (chữ to)
@@ -50,7 +58,7 @@ export interface SiteContent {
 }
 
 export const LIMITS = {
-  points: 4, looks: 8, line1: 40, line2: 60, point: 40, side: 80, cta: 24, lookName: 30, interval: [2, 30] as const,
+  points: 4, looks: 8, lookDecals: 16, line1: 40, line2: 60, point: 40, side: 80, cta: 24, lookName: 30, interval: [2, 30] as const,
   title: 60, tag: 30, cardTitle: 80, cardText: 300,
   steps: [1, 6] as const, gallery: [1, 12] as const, galleryName: 30,
   faq: 20, question: 160, answer: 1500, links: 4, linkLabel: 60, href: 500, footer: 80,
@@ -63,7 +71,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     points: ['Thoả sức sáng tạo', 'Tuỳ chỉnh dễ dàng'],
     side: 'Bạn đã sẵn sàng sáng tạo?',
     cta: 'Bắt đầu',
-    looks: PRESETS.map(p => ({ id: p.id, name: p.name, config: p.config })),
+    looks: PRESETS.map(p => ({ id: p.id, name: p.name, config: p.config, decals: [], accessories: {} })),
     interval: 5,
   },
   features: {
@@ -118,10 +126,31 @@ export function normalizeConfig(v: unknown): DesignConfig {
   }));
 }
 
+const num = (v: unknown, def: number, lo: number, hi: number) => (typeof v === 'number' && isFinite(v) ? Math.min(hi, Math.max(lo, v)) : def);
+const vec3 = (v: unknown): [number, number, number] | null => {
+  const a = arr(v); return a && a.length === 3 && a.every(x => typeof x === 'number' && isFinite(x)) ? a as [number, number, number] : null;
+};
+function normalizeDecal(v: unknown): LookDecal | null {
+  const o = obj(v), src = img(o.src, ''), position = vec3(o.position), normal = vec3(o.normal);
+  if (!src || !position || !normal) return null;   // ảnh phải là đường dẫn trong web (không nhận data: URL — quá nặng)
+  return {
+    label: str(o.label, 'Decal', 40), src, aspect: num(o.aspect, 1, 0.05, 20), position, normal,
+    size: num(o.size, DECAL_SIZE.initial, DECAL_SIZE.min, DECAL_SIZE.max), rotation: num(o.rotation, 0, -360, 360),
+    opacity: num(o.opacity, 1, 0.05, 1), flip: o.flip === true,
+  };
+}
+
 function normalizeHero(v: unknown): HeroContent {
   const h = obj(v), d = DEFAULT_CONTENT.hero;
   const points = arr(h.points)?.filter((p): p is string => typeof p === 'string').slice(0, LIMITS.points).map(p => p.slice(0, LIMITS.point)) ?? d.points;
-  const looks = arr(h.looks)?.slice(0, LIMITS.looks).map((l, k) => { const o = obj(l); return { id: str(o.id, 'look' + k, 40) || 'look' + k, name: str(o.name, '', LIMITS.lookName), config: normalizeConfig(o.config) }; }) ?? d.looks;
+  const looks = arr(h.looks)?.slice(0, LIMITS.looks).map((l, k) => {
+    const o = obj(l);
+    return {
+      id: str(o.id, 'look' + k, 40) || 'look' + k, name: str(o.name, '', LIMITS.lookName), config: normalizeConfig(o.config),
+      decals: (arr(o.decals) ?? []).map(normalizeDecal).filter((x): x is LookDecal => !!x).slice(0, LIMITS.lookDecals),
+      accessories: normalizeFitted(o.accessories),
+    };
+  }) ?? d.looks;
   const iv = typeof h.interval === 'number' && isFinite(h.interval) ? h.interval : d.interval;
   return {
     line1: str(h.line1, d.line1, LIMITS.line1),

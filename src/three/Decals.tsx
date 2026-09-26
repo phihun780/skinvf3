@@ -38,19 +38,19 @@ const _o = new THREE.Object3D(), _box = new THREE.Box3(), _sphere = new THREE.Sp
 /** Vùng gốc của decal = vùng nằm ngay dưới điểm dán. Decal chỉ in trên vùng này (như tô màu từng vùng: dán ở thân xe
  *  thì không lem sang capo / nóc). Điểm dán nằm trên ốp không in decal (NO_DECAL_ZONES) → in lên thân xe (cắt theo mép ốp). */
 const _ray = new THREE.Raycaster();
-function anchorZone(p: THREE.Vector3, n: THREE.Vector3): string {
+function anchorZone(targets: THREE.Mesh[], p: THREE.Vector3, n: THREE.Vector3): string {
   _ray.set(p.clone().addScaledVector(n, 0.03), n.clone().negate()); _ray.far = 0.08;
-  const z = _ray.intersectObjects(decalTargets, false)[0]?.object.userData.zone as string | undefined;
+  const z = _ray.intersectObjects(targets, false)[0]?.object.userData.zone as string | undefined;
   return !z || NO_DECAL_ZONES.includes(z) ? 'body' : z;
 }
 
-function buildGeometry(position: Vec3, normal: Vec3, size: number, aspect: number, rotation: number) {
+function buildGeometry(targets: THREE.Mesh[], position: Vec3, normal: Vec3, size: number, aspect: number, rotation: number) {
   const p = new THREE.Vector3(...position), n = new THREE.Vector3(...normal).normalize();
   _o.position.copy(p); _o.lookAt(p.clone().add(n)); _o.rotateZ(THREE.MathUtils.degToRad(rotation));
   const dims = new THREE.Vector3(size, size / aspect, decalDepth(size));
   _sphere.set(p, dims.length() / 2);
-  const parts: THREE.BufferGeometry[] = [], zone = anchorZone(p, n);
-  for (const mesh of decalTargets) {
+  const parts: THREE.BufferGeometry[] = [], zone = anchorZone(targets, p, n);
+  for (const mesh of targets) {
     if (mesh.userData.zone !== zone) continue;  // chỉ in trên vùng gốc (ốp không in decal không bao giờ là vùng gốc)
     _box.copy(mesh.geometry.boundingBox ?? mesh.geometry.computeBoundingBox()!).applyMatrix4(mesh.matrixWorld);
     if (!_box.intersectsSphere(_sphere)) continue;  // bỏ qua mảng ở xa: kéo decal mượt hơn
@@ -80,7 +80,7 @@ function useDecalTexture(src: string) {
 function DecalMesh({ decal, index, ghost = false }: { decal: Omit<Decal, 'id'> & { id?: string }; index: number; ghost?: boolean }) {
   const tex = useDecalTexture(decal.src);
   const { position, normal, size, aspect, rotation } = decal;
-  const geometry = useMemo(() => buildGeometry(position, normal, size, aspect, rotation),
+  const geometry = useMemo(() => buildGeometry(decalTargets, position, normal, size, aspect, rotation),
     [position[0], position[1], position[2], normal[0], normal[1], normal[2], size, aspect, rotation]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => geometry?.dispose(), [geometry]);
 
@@ -117,6 +117,33 @@ function DecalMesh({ decal, index, ghost = false }: { decal: Omit<Decal, 'id'> &
       />
     </mesh>
   );
+}
+
+/** Decal tĩnh trên xe trưng bày (hero trang chủ): không bắt chuột, dựng lên đúng các mesh của xe đó. */
+function StaticDecal({ decal, index, targets }: { decal: DecalLike; index: number; targets: THREE.Mesh[] }) {
+  const tex = useDecalTexture(decal.src);
+  const { position, normal, size, aspect, rotation } = decal;
+  const geometry = useMemo(() => buildGeometry(targets, position, normal, size, aspect, rotation),
+    [targets, position[0], position[1], position[2], normal[0], normal[1], normal[2], size, aspect, rotation]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => geometry?.dispose(), [geometry]);
+  const map = useMemo(() => {
+    if (!tex) return null;
+    const m = tex.clone(); m.needsUpdate = true;
+    if (decal.flip) { m.wrapS = THREE.RepeatWrapping; m.repeat.x = -1; m.offset.x = 1; }
+    return m;
+  }, [tex, decal.flip]);
+  if (!geometry || !map) return null;
+  return (
+    <mesh geometry={geometry} renderOrder={10 + index} raycast={noRaycast}>
+      <meshPhysicalMaterial map={map} transparent opacity={decal.opacity} depthWrite={false}
+        polygonOffset polygonOffsetFactor={-4 - index} polygonOffsetUnits={-4} roughness={0.4} clearcoat={0.6} clearcoatRoughness={0.1} />
+    </mesh>
+  );
+}
+type DecalLike = Pick<Decal, 'src' | 'position' | 'normal' | 'size' | 'aspect' | 'rotation' | 'opacity' | 'flip'>;
+
+export function ShowcaseDecals({ decals, targets }: { decals: DecalLike[]; targets: THREE.Mesh[] }) {
+  return <>{decals.map((d, i) => <StaticDecal key={i + d.src + d.position.join()} decal={d} index={i} targets={targets} />)}</>;
 }
 
 // trạng thái kéo decal (dùng chung giữa DecalMesh và DecalController)

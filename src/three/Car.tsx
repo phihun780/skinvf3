@@ -16,7 +16,8 @@ const GLOW = new THREE.Color('#3cc8ff');  // cùng màu --accent
 const CLICK_TOLERANCE = 4;                // px: kéo xoay xa hơn thì không tính là bấm chọn
 
 interface CarProps {
-  onLoaded?: (box: THREE.Box3) => void;
+  /** targets: các mesh nhận decal của chính xe này (bản trưng bày có danh sách riêng). */
+  onLoaded?: (box: THREE.Box3, targets: THREE.Mesh[]) => void;
   /** Chế độ trưng bày (trang chủ): dùng bảng màu này thay cho thiết kế của người dùng, đổi màu mượt, không bắt chuột. */
   showcase?: DesignConfig;
 }
@@ -31,7 +32,8 @@ export function Car({ onLoaded, showcase }: CarProps) {
     [id, new THREE.MeshPhysicalMaterial({ emissive: GLOW, emissiveIntensity: 0 })])), []);
 
   useLayoutEffect(() => {
-    if (!showcase) decalTargets.length = 0;
+    const targets: THREE.Mesh[] = showcase ? [] : decalTargets;
+    targets.length = 0;
     scene.updateMatrixWorld(true);
     scene.traverse(o => {
       if (!(o instanceof THREE.Mesh)) return;
@@ -40,9 +42,9 @@ export function Car({ onLoaded, showcase }: CarProps) {
       o.castShadow = !NO_CAST_SHADOW.includes(o.userData.zone);
       if (isEditable(o.userData.zone)) o.material = materials[o.userData.zone];
       const group = zoneInfo(o.userData.zone)?.group;
-      if (!showcase && group && (DECAL_TARGET_GROUPS as readonly string[]).includes(group)) decalTargets.push(o);
+      if (group && (DECAL_TARGET_GROUPS as readonly string[]).includes(group)) targets.push(o);
     });
-    onLoaded?.(new THREE.Box3().setFromObject(scene));
+    onLoaded?.(new THREE.Box3().setFromObject(scene), targets);
     if (import.meta.env.DEV && !showcase) Object.assign(window, { __car: scene });
   }, [scene, materials, onLoaded, showcase]);
 

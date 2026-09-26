@@ -6,6 +6,7 @@ import { DEFAULT_CONFIG, type DesignConfig } from '../../config/zones';
 import { STEP_ICONS, Icon } from '../../ui/icons';
 import { CmsCtx, Group, ImageField, ItemTools, TextArea, TextField, ZoneEditor, moveItem } from './fields';
 import { ThumbMaker } from './ThumbMaker';
+import { LookExtras } from './LookExtras';
 
 /** Sửa 1 mục: truyền phần thay đổi, hoặc hàm nhận nội dung mới nhất (dùng khi cập nhật sau 1 việc chạy nền). */
 export type Set<T> = (patch: Partial<T> | ((prev: T) => Partial<T>)) => void;
@@ -29,7 +30,8 @@ export function HeroForm({ hero, set, look, setLook, gallery }: { hero: HeroCont
   const patchLook = (patch: Partial<HeroLook>) => setLooks(looks.map((l, k) => (k === look ? { ...l, ...patch } : l)));
   const addLook = (from: GalleryItem | undefined) => {
     if (looks.length >= LIMITS.looks) return;
-    setLooks([...looks, from ? { id: newId('look'), name: from.name, config: { ...from.config } } : { id: newId('look'), name: cur.name + ' (bản sao)', config: { ...cur.config } }]);
+    setLooks([...looks, from ? { id: newId('look'), name: from.name, config: { ...from.config }, decals: [], accessories: {} }
+      : { id: newId('look'), name: cur.name + ' (bản sao)', config: { ...cur.config }, decals: [...cur.decals], accessories: { ...cur.accessories } }]);
     setLook(looks.length);
   };
 
@@ -75,6 +77,7 @@ export function HeroForm({ hero, set, look, setLook, gallery }: { hero: HeroCont
               </select>
             </label>
             <ZoneEditor config={cur.config} onChange={config => patchLook({ config })} />
+            <LookExtras look={cur} patch={patchLook} />
           </div>
         )}
 

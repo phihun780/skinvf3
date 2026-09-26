@@ -51,7 +51,7 @@ function Hero() {
 
   // ảnh chờ: khung hình đã chụp ở lần mở trước (cùng cỡ khung, cùng màu xe đầu tiên) → hiện ngay trong lúc dựng xe 3D
   const carBox = useRef<HTMLDivElement>(null);
-  const firstKey = hashOf(looks[0].config);
+  const firstKey = hashOf([looks[0].config, looks[0].decals, looks[0].accessories]);
   const [still, setStill] = useState<string | null>(null);
   useLayoutEffect(() => {
     if (IS_PREVIEW) return;
@@ -72,7 +72,7 @@ function Hero() {
       <div ref={carBox} className={'hero-car' + (ready || still ? ' ready' : '') + (still ? ' instant' : '')}>
         {still && <img className={'hero-still' + (ready ? ' out' : '')} src={still} alt="" aria-hidden />}
         <div className={'hero-canvas' + (ready ? ' on' : '')}>
-          <Suspense fallback={null}><HeroCar config={look.config} onReady={() => setReady(true)} onCapture={capture} active={inView} /></Suspense>
+          <Suspense fallback={null}><HeroCar config={look.config} decals={look.decals} accessories={look.accessories} onReady={() => setReady(true)} onCapture={capture} active={inView} /></Suspense>
         </div>
       </div>
       {!ready && !still && <div className="hero-loading"><i />{T.hero.loading}</div>}
